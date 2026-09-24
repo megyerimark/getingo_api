@@ -10,3 +10,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::get("/kategoriak", [CategoryController::class, "index"]);
 Route::post("/regisztracio", [AuthController::class, "register"]);
+Route::post("/bejelentkezes", [AuthController::class, "login"]);
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+
+    
+});
