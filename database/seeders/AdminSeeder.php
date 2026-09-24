@@ -16,8 +16,8 @@ class AdminSeeder extends Seeder
     {
         User::create([
             'name' => 'Főadminisztrátor',
-            'email' => 'admin@getingo.hu',
-            'password' => Hash::make('titkosadmin123'),
+            'email' => 'admin@a.hu',
+            'password' => Hash::make('a'),
             'role' => 'admin',
         ]);
     }

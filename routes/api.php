@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminLessonController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use Illuminate\Http\Request;
@@ -28,5 +29,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Példa: Cikkek / Leckék felvitele, módosítása, törlése
     // Route::post('/lessons', [AdminLessonController::class, 'store']);
     Route::get('/dashboard', [AdminController::class, 'dashboard']);
+    Route::post('/leckek', [AdminLessonController::class, 'store']);
 
 });
