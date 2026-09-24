@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminLessonController;
 use App\Http\Controllers\Admin\AdminProjectController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\Student\LessonController;
@@ -33,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/notes', [NoteController::class, 'store']);
     Route::post('/progress', [ProgressController::class, 'complete']);
+    Route::post('/favorites/toggle', [FavoriteController::class, 'toggle']);
 
 });
 
