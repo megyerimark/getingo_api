@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\AdminExerciseController;
 use App\Http\Controllers\Admin\AdminLessonController;
 use App\Http\Controllers\Admin\AdminProjectController;
 use App\Http\Controllers\Admin\AdminQuizController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
@@ -52,5 +54,9 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/exercises', [AdminExerciseController::class, 'store']);
     Route::post('/projects', [AdminProjectController::class, 'store']);
     Route::post('/quizzes', [AdminQuizController::class, 'store']);
+    Route::get('/dashboard-stats', [AdminDashboardController::class, 'stats']);
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::patch('/users/{id}/role', [AdminUserController::class, 'updateRole']);
+    Route::post('/users/{id}/toggle-ban', [AdminUserController::class, 'toggleBan']);
 
 });
