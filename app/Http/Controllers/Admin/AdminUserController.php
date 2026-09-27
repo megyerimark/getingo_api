@@ -8,46 +8,66 @@ use Illuminate\Http\Request;
 
 class AdminUserController extends Controller
 {
- public function index()
+    public function index()
     {
-        $users = User::select('id', 'name', 'email', 'role', 'is_banned', 'created_at')->paginate(21);
-        
-        return response()->json($users, 200);
+        return response()->json(
+            User::select(
+                'id',
+                'name',
+                'email',
+                'role',
+                'is_banned',
+                'created_at'
+            )->paginate(21)
+        );
     }
 
     public function updateRole(Request $request, $id)
     {
-        $request->validate([
-            'role' => 'required|in:admin,student'
+        $validated = $request->validate([
+            'role' => ['required', 'in:admin,student'],
         ]);
-        
+
         $user = User::findOrFail($id);
-        $user->role = $request->role;
-        $user->save();
+
+        if ($user->id === $request->user()->id) {
+            return response()->json([
+                'message' => 'A saját szerepkörödet nem módosíthatod.'
+            ], 403);
+        }
+
+        $user->update([
+            'role' => $validated['role']
+        ]);
 
         return response()->json([
             'message' => 'Szerepkör sikeresen frissítve!',
-            'user' => $user
-        ], 200);
+            'user' => $user,
+        ]);
     }
 
-    public function toggleBan($id)
+    public function toggleBan(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
-        if ($user->id === auth()->id()) {
-            return response()->json(['message' => 'Saját magadat nem tilthatod ki!'], 403);
+
+        if ($user->id === $request->user()->id) {
+            return response()->json([
+                'message' => 'Saját magadat nem tilthatod ki!'
+            ], 403);
         }
 
         $user->is_banned = !$user->is_banned;
         $user->save();
 
-        $status = $user->is_banned ? 'kitiltva' : 'visszaengedve';
-        
-        return response()->json([
-            'message' => "A felhasználó sikeresen {$status}!",
-            'is_banned' => $user->is_banned
-        ], 200);
-    }
+        if ($user->is_banned) {
+            $user->tokens()->delete();
+        }
 
+        return response()->json([
+            'message' => $user->is_banned
+                ? 'Felhasználó kitiltva!'
+                : 'Felhasználó visszaengedve!',
+            'is_banned' => $user->is_banned,
+        ]);
+    }
 }

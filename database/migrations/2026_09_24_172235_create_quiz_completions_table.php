@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('quiz_completions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('quiz_id')->constrained()->onDelete('cascade');
+            $table->unique(['user_id', 'quiz_id']);
+            /* $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('quiz_id')->constrained()->onDelete('cascade'); */
             $table->timestamps();
         });
     }

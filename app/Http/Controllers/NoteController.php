@@ -4,36 +4,83 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 
 class NoteController extends Controller
 {
+    public function index(Request $request)
+    {
+        return response()->json(
+            Note::where('user_id', $request->user()->id)
+                ->latest()
+                ->get()
+        );
+    }
+
     public function store(Request $request)
     {
-        $request->validate([
-            'lesson_id' => 'required|exists:lessons,id',
-            'content' => 'required|string',
+        $validated = $request->validate([
+            'lesson_id' => ['required', 'integer', 'exists:lessons,id'],
+            'content' => ['required', 'string', 'max:10000'],
         ]);
 
-        // A diák ID-ját a tokenből nyerjük ki (auth()->id()), nem a beküldött adatokból!
-    /*   $note = Note::updateOrCreate(
-            ['user_id' => auth()->id(), 'lesson_id' => $request->lesson_id],
-            ['content' => $request->content]
-         */
         $note = Note::updateOrCreate(
             [
-                'user_id'   => $request->user()->id,
-                'lesson_id' => $validated['lesson_id']
+                'user_id' => $request->user()->id,
+                'lesson_id' => $validated['lesson_id'],
             ],
             [
-                // A strip_tags itt tisztítja meg a már validált stringet az XSS támadásoktól
-                'content'   => strip_tags($validated['content'])
+                'content' => strip_tags($validated['content']),
             ]
         );
 
         return response()->json([
             'message' => 'Jegyzet mentve!',
-            'note' => $note
-        ], 200);
+            'note' => $note,
+        ]);
+    }
+
+    public function show(Request $request, Note $note)
+    {
+        $this->checkOwner($request, $note);
+
+        return response()->json($note);
+    }
+
+    public function update(Request $request, Note $note)
+    {
+        $this->checkOwner($request, $note);
+
+        $validated = $request->validate([
+            'content' => ['required', 'string', 'max:10000'],
+        ]);
+
+        $note->update([
+            'content' => strip_tags($validated['content']),
+        ]);
+
+        return response()->json([
+            'message' => 'Jegyzet frissítve!',
+            'note' => $note,
+        ]);
+    }
+
+    public function destroy(Request $request, Note $note)
+    {
+        $this->checkOwner($request, $note);
+
+        $note->delete();
+
+        return response()->json([
+            'message' => 'Jegyzet törölve!'
+        ]);
+    }
+
+    private function checkOwner(Request $request, Note $note): void
+    {
+        abort_unless(
+            $note->user_id === $request->user()->id,
+            403,
+            'Nincs jogosultságod ehhez a jegyzethez.'
+        );
     }
 }
