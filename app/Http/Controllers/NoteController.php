@@ -16,9 +16,19 @@ class NoteController extends Controller
         ]);
 
         // A diák ID-ját a tokenből nyerjük ki (auth()->id()), nem a beküldött adatokból!
-        $note = Note::updateOrCreate(
+    /*   $note = Note::updateOrCreate(
             ['user_id' => auth()->id(), 'lesson_id' => $request->lesson_id],
             ['content' => $request->content]
+         */
+        $note = Note::updateOrCreate(
+            [
+                'user_id'   => $request->user()->id,
+                'lesson_id' => $validated['lesson_id']
+            ],
+            [
+                // A strip_tags itt tisztítja meg a már validált stringet az XSS támadásoktól
+                'content'   => strip_tags($validated['content'])
+            ]
         );
 
         return response()->json([

@@ -10,7 +10,7 @@ class AdminUserController extends Controller
 {
  public function index()
     {
-        $users = User::select('id', 'name', 'email', 'role', 'is_banned', 'created_at')->get();
+        $users = User::select('id', 'name', 'email', 'role', 'is_banned', 'created_at')->paginate(21);
         
         return response()->json($users, 200);
     }
