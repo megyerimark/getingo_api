@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Lesson;
-use Illuminate\Http\Request;
 
 class LessonController extends Controller
 {
-    public function index($categoryId)
+    public function index(int $category_id)
     {
-        // Lekéri az összes leckét, ami az adott kategóriához tartozik
-        $lessons = Lesson::where('category_id', $categoryId)->get();
-        
-        return response()->json($lessons, 200);
+        Category::findOrFail($category_id);
+
+        $lessons = Lesson::query()
+            ->where('category_id', $category_id)
+            ->select('id', 'category_id', 'title', 'slug', 'content', 'example_code', 'created_at', 'updated_at')
+            ->orderBy('id')
+            ->get();
+
+        return response()->json($lessons);
     }
 }

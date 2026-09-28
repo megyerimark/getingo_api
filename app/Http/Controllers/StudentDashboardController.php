@@ -10,18 +10,22 @@ use Illuminate\Http\Request;
 
 class StudentDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         $totalLessons = Lesson::count();
-        $completedLessons = LessonProgress::where('user_id', $user->id)->count();
-        
-        // Százalékos haladás kiszámítása
-        $progressPercentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+        $completedLessons = LessonProgress::where('user_id', $user->id)
+            ->where('completed', true)
+            ->count();
+
+        $progressPercentage = $totalLessons > 0
+            ? round(($completedLessons / $totalLessons) * 100)
+            : 0;
 
         return response()->json([
             'user' => [
+                'id' => $user->id,
                 'name' => $user->name,
                 'xp_points' => $user->xp_points,
                 'current_streak' => $user->current_streak,
@@ -29,9 +33,16 @@ class StudentDashboardController extends Controller
             'stats' => [
                 'progress_percentage' => $progressPercentage,
                 'completed_lessons_count' => $completedLessons,
+                'total_lessons_count' => $totalLessons,
             ],
-            'notes' => Note::where('user_id', $user->id)->get(),
-            'favorites' => Favorite::where('user_id', $user->id)->get()
-        ], 200);
+            'notes' => Note::where('user_id', $user->id)
+                ->latest()
+                ->limit(20)
+                ->get(),
+            'favorites' => Favorite::where('user_id', $user->id)
+                ->latest()
+                ->limit(20)
+                ->get(),
+        ]);
     }
 }

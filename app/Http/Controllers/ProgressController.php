@@ -4,47 +4,46 @@ namespace App\Http\Controllers;
 
 use App\Models\LessonProgress;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
+
 class ProgressController extends Controller
 {
- /*    public function complete(Request $request)
-    {
-        $request->validate([
-            'lesson_id' => 'required|exists:lessons,id'
-        ]);
-
-        $progress = LessonProgress::updateOrCreate(
-            ['user_id' => auth()->id(), 'lesson_id' => $request->lesson_id],
-            ['completed' => true]
-        );
-
-        return response()->json([
-            'message' => 'Lecke sikeresen teljesítve!',
-            'progress' => $progress
-        ], 200);
-    } */
     public function complete(Request $request)
     {
-        $request->validate(['lesson_id' => 'required|exists:lessons,id']);
-        $user = auth()->user();
+        $validated = $request->validate([
+            'lesson_id' => ['required', 'integer', 'exists:lessons,id'],
+        ]);
 
-        // A firstOrCreate megnézi, hogy létezik-e. Ha nem, létrehozza és visszaadja.
-        $progress = LessonProgress::firstOrCreate(
-            ['user_id' => $user->id, 'lesson_id' => $request->lesson_id],
-            ['completed' => true]
-        );
+        $user = $request->user();
 
-        // A wasRecentlyCreated tulajdonság csak akkor igaz, ha most jött létre az adatbázisban
-        if ($progress->wasRecentlyCreated) {
-            $user->increment('xp_points', 10); // Adunk 10 XP-t
-            $message = 'Lecke teljesítve! +10 XP';
-        } else {
-            $message = 'Ezt a leckét már korábban teljesítetted.';
-        }
+        $result = DB::transaction(function () use ($user, $validated): array {
+            $progress = LessonProgress::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'lesson_id' => $validated['lesson_id'],
+                ],
+                ['completed' => true]
+            );
 
-        return response()->json([
-            'message' => $message,
-            'current_xp' => $user->xp_points
-        ], 200);
+            if ($progress->wasRecentlyCreated) {
+                $user->increment('xp_points', 10);
+                $message = 'Lecke teljesítve! +10 XP';
+            } else {
+                if (!$progress->completed) {
+                    $progress->update(['completed' => true]);
+                    $user->increment('xp_points', 10);
+                    $message = 'Lecke teljesítve! +10 XP';
+                } else {
+                    $message = 'Ezt a leckét már korábban teljesítetted.';
+                }
+            }
+
+            return [
+                'message' => $message,
+                'current_xp' => $user->fresh()->xp_points,
+            ];
+        });
+
+        return response()->json($result);
     }
 }

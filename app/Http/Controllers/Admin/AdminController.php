@@ -1,27 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Admin;;
+namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        // Alapvető statisztikák lekérése az Admin Dashboardra
-        $totalUsers = User::count();
-        $studentCount = User::where('role', 'user')->count();
-        $adminCount = User::where('role', 'admin')->count();
-
         return response()->json([
             'message' => 'Üdv a Getingo Admin Paneljén!',
             'statistics' => [
-                'total_users' => $totalUsers,
-                'students' => $studentCount,
-                'admins' => $adminCount
-            ]
-        ], 200);
-}
+                'total_users' => User::count(),
+                'students' => User::where('role', 'student')->count(),
+                'admins' => User::where('role', 'admin')->count(),
+                'banned' => User::where('is_banned', true)->count(),
+            ],
+        ]);
+    }
 }

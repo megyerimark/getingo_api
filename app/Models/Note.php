@@ -14,4 +14,9 @@ class Note extends Model
         'lesson_id',
         'content'
     ];
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class);
+    }
 }

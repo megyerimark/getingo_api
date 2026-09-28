@@ -11,7 +11,8 @@ class NoteController extends Controller
     {
         return response()->json(
             Note::where('user_id', $request->user()->id)
-                ->latest()
+                ->with('lesson:id,title,category_id')
+                ->orderByDesc('updated_at')
                 ->get()
         );
     }
@@ -19,23 +20,23 @@ class NoteController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'lesson_id' => ['required', 'integer', 'exists:lessons,id'],
-            'content' => ['required', 'string', 'max:10000'],
+            'lesson_id' => 'required|exists:lessons,id',
+            'content' => 'required|string|max:10000'
         ]);
 
         $note = Note::updateOrCreate(
             [
                 'user_id' => $request->user()->id,
-                'lesson_id' => $validated['lesson_id'],
+                'lesson_id' => $validated['lesson_id']
             ],
             [
-                'content' => strip_tags($validated['content']),
+                'content' => strip_tags($validated['content'])
             ]
         );
 
         return response()->json([
             'message' => 'Jegyzet mentve!',
-            'note' => $note,
+            'note' => $note->load('lesson:id,title,category_id')
         ]);
     }
 
@@ -43,7 +44,9 @@ class NoteController extends Controller
     {
         $this->checkOwner($request, $note);
 
-        return response()->json($note);
+        return response()->json(
+            $note->load('lesson:id,title,category_id')
+        );
     }
 
     public function update(Request $request, Note $note)
@@ -51,23 +54,22 @@ class NoteController extends Controller
         $this->checkOwner($request, $note);
 
         $validated = $request->validate([
-            'content' => ['required', 'string', 'max:10000'],
+            'content' => 'required|string|max:10000'
         ]);
 
         $note->update([
-            'content' => strip_tags($validated['content']),
+            'content' => strip_tags($validated['content'])
         ]);
 
         return response()->json([
             'message' => 'Jegyzet frissítve!',
-            'note' => $note,
+            'note' => $note->fresh()->load('lesson:id,title,category_id')
         ]);
     }
 
     public function destroy(Request $request, Note $note)
     {
         $this->checkOwner($request, $note);
-
         $note->delete();
 
         return response()->json([
@@ -77,10 +79,6 @@ class NoteController extends Controller
 
     private function checkOwner(Request $request, Note $note): void
     {
-        abort_unless(
-            $note->user_id === $request->user()->id,
-            403,
-            'Nincs jogosultságod ehhez a jegyzethez.'
-        );
+        abort_if($note->user_id !== $request->user()->id, 403, 'Nincs jogosultságod ehhez a jegyzethez.');
     }
 }

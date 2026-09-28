@@ -2,23 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use RuntimeException;
 
 class AdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        User::create([
-            'name' => 'Főadminisztrátor',
-            'email' => 'admin@a.hu',
-            'password' => Hash::make('a'),
-            'role' => 'admin',
-        ]);
+        throw new RuntimeException(
+            'Biztonsági okból az AdminSeeder le van tiltva. Használd: php artisan getingo:create-admin'
+        );
     }
 }

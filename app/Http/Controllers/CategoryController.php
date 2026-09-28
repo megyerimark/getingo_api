@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
     public function index()
     {
-        return response()->json(Category::orderBy('sort_order')->get(), 200);
+        return response()->json(
+            Category::query()
+                ->select('id', 'name', 'slug', 'sort_order')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get()
+        );
     }
 }

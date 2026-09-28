@@ -6,24 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('lesson_progress', function (Blueprint $table) {
             $table->id();
-            $table->unique(['user_id', 'lesson_id']);
-           /*  $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('lesson_id')->constrained()->onDelete('cascade'); */
-            $table->boolean('completed')->default(false); // Alapból nincs befejezve[cite: 1]
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('lesson_id')->constrained()->cascadeOnDelete();
+            $table->boolean('completed')->default(false);
             $table->timestamps();
+
+            $table->unique(['user_id', 'lesson_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('lesson_progress');

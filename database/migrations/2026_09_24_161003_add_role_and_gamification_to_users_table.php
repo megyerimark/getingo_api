@@ -6,25 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-        $table->string('role')->default('user')->after('password');
-        $table->integer('xp_points')->default(0)->after('role');
-        $table->integer('current_streak')->default(0)->after('xp_points');
+            $table->string('role', 20)->default('student')->after('password')->index();
+            $table->unsignedInteger('xp_points')->default(0)->after('role');
+            $table->unsignedInteger('current_streak')->default(0)->after('xp_points');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropColumn(['role', 'xp_points', 'current_streak']);
         });
     }
 };

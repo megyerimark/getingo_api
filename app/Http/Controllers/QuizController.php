@@ -2,22 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\QuizCompletion;
 use Illuminate\Http\Request;
 
 class QuizController extends Controller
 {
-    public function submit(Request $request, $quizId)
+    public function byLesson($lessonId)
     {
-        $request->validate(['answer' => 'required|in:a,b,c,d']);
-        $quiz = Quiz::findOrFail($quizId);
-        $user = auth()->user();
+        $quizzes = Quiz::where('lesson_id', $lessonId)
+            ->select(
+                'id',
+                'lesson_id',
+                'question',
+                'option_a',
+                'option_b',
+                'option_c',
+                'option_d'
+            )
+            ->get();
 
-        if ($request->answer !== $quiz->correct_answer) {
-            return response()->json(['message' => 'Helytelen válasz, próbáld újra!', 'correct' => false], 200);
+        return response()->json($quizzes);
+    }
+
+    public function check(Request $request, Quiz $quiz)
+    {
+        $validated = $request->validate([
+            'answer' => 'required|in:a,b,c,d'
+        ]);
+
+        $correct = $validated['answer'] === $quiz->correct_answer;
+
+        return response()->json([
+            'correct' => $correct,
+            'message' => $correct
+                ? 'Helyes válasz!'
+                : 'Helytelen válasz, próbáld újra!'
+        ]);
+    }
+
+    public function submit(Request $request, Quiz $quiz)
+    {
+        $validated = $request->validate([
+            'answer' => 'required|in:a,b,c,d'
+        ]);
+
+        if ($validated['answer'] !== $quiz->correct_answer) {
+            return response()->json([
+                'correct' => false,
+                'message' => 'Helytelen válasz, próbáld újra!'
+            ]);
         }
+
+        $user = $request->user();
 
         $completion = QuizCompletion::firstOrCreate([
             'user_id' => $user->id,
@@ -25,10 +62,21 @@ class QuizController extends Controller
         ]);
 
         if ($completion->wasRecentlyCreated) {
-            $user->increment('xp_points', 5); // +5 XP a sikeres kvízért
-            return response()->json(['message' => 'Helyes válasz! +5 XP', 'correct' => true], 200);
+            $user->increment('xp_points', 5);
+
+            return response()->json([
+                'correct' => true,
+                'message' => 'Helyes válasz! +5 XP',
+                'xp_awarded' => 5,
+                'current_xp' => $user->fresh()->xp_points
+            ]);
         }
 
-        return response()->json(['message' => 'Helyes válasz! (Már korábban megoldottad)', 'correct' => true], 200);
+        return response()->json([
+            'correct' => true,
+            'message' => 'Helyes válasz! Ezt a kvízt már korábban teljesítetted.',
+            'xp_awarded' => 0,
+            'current_xp' => $user->xp_points
+        ]);
     }
 }

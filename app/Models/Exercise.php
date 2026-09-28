@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Exercise extends Model
 {
@@ -14,6 +15,15 @@ class Exercise extends Model
         'title',
         'description',
         'difficulty',
-        'solution'
+        'solution',
     ];
+
+    protected $hidden = [
+        'solution',
+    ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

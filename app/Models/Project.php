@@ -14,6 +14,17 @@ class Project extends Model
         'description',
         'difficulty',
         'estimated_time',
-        'solution'
+        'solution',
     ];
+
+    protected $hidden = [
+        'solution',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'estimated_time' => 'integer',
+        ];
+    }
 }
