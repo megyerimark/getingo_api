@@ -38,6 +38,21 @@ class GdprController extends Controller
             'quiz_completions' => $user->quizCompletions()
                 ->select('id', 'user_id', 'quiz_id', 'created_at', 'updated_at')
                 ->get(),
+            'companion' => $user->companion()
+                ->select(
+                    'id',
+                    'user_id',
+                    'name',
+                    'care_points',
+                    'water',
+                    'hunger',
+                    'happiness',
+                    'selected_skin',
+                    'last_interaction_at',
+                    'created_at',
+                    'updated_at'
+                )
+                ->first(),
         ];
 
         return response()->json($payload)

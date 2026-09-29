@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CompanionController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GdprController;
 use App\Http\Controllers\NoteController;
@@ -51,6 +52,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [StudentDashboardController::class, 'index']);
+    Route::get('/companion', [CompanionController::class, 'show'])
+        ->middleware('throttle:user-api');
+    Route::post('/companion/action', [CompanionController::class, 'action'])
+        ->middleware('throttle:user-api');
     Route::patch('/account', [AccountController::class, 'update']);
     Route::put('/account/password', [AccountController::class, 'changePassword'])
         ->middleware('throttle:gdpr');

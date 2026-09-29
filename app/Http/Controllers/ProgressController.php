@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\LessonProgress;
 use Illuminate\Http\Request;
+use App\Services\CompanionService;
 use Illuminate\Support\Facades\DB;
 
 class ProgressController extends Controller
 {
+    public function __construct(private CompanionService $companionService)
+    {
+    }
+
     public function complete(Request $request)
     {
         $validated = $request->validate([
@@ -26,13 +31,13 @@ class ProgressController extends Controller
             );
 
             if ($progress->wasRecentlyCreated) {
-                $user->increment('xp_points', 10);
-                $message = 'Lecke teljesítve! +10 XP';
+                $this->companionService->awardLearningPoints($user, 10);
+                $message = 'Lecke teljesítve! +10 XP és +10 gondozási pont';
             } else {
                 if (!$progress->completed) {
                     $progress->update(['completed' => true]);
-                    $user->increment('xp_points', 10);
-                    $message = 'Lecke teljesítve! +10 XP';
+                    $this->companionService->awardLearningPoints($user, 10);
+                    $message = 'Lecke teljesítve! +10 XP és +10 gondozási pont';
                 } else {
                     $message = 'Ezt a leckét már korábban teljesítetted.';
                 }

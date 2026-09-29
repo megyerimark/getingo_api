@@ -4,10 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Quiz;
 use App\Models\QuizCompletion;
+use App\Services\CompanionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class QuizController extends Controller
 {
+    public function __construct(private CompanionService $companionService)
+    {
+    }
+
     public function byLesson($lessonId)
     {
         $quizzes = Quiz::where('lesson_id', $lessonId)
@@ -56,27 +62,33 @@ class QuizController extends Controller
 
         $user = $request->user();
 
-        $completion = QuizCompletion::firstOrCreate([
-            'user_id' => $user->id,
-            'quiz_id' => $quiz->id
-        ]);
-
-        if ($completion->wasRecentlyCreated) {
-            $user->increment('xp_points', 5);
-
-            return response()->json([
-                'correct' => true,
-                'message' => 'Helyes válasz! +5 XP',
-                'xp_awarded' => 5,
-                'current_xp' => $user->fresh()->xp_points
+        $result = DB::transaction(function () use ($user, $quiz): array {
+            $completion = QuizCompletion::firstOrCreate([
+                'user_id' => $user->id,
+                'quiz_id' => $quiz->id
             ]);
-        }
 
-        return response()->json([
-            'correct' => true,
-            'message' => 'Helyes válasz! Ezt a kvízt már korábban teljesítetted.',
-            'xp_awarded' => 0,
-            'current_xp' => $user->xp_points
-        ]);
+            if ($completion->wasRecentlyCreated) {
+                $this->companionService->awardLearningPoints($user, 5);
+
+                return [
+                    'correct' => true,
+                    'message' => 'Helyes válasz! +5 XP és +5 gondozási pont',
+                    'xp_awarded' => 5,
+                    'care_points_awarded' => 5,
+                    'current_xp' => $user->fresh()->xp_points,
+                ];
+            }
+
+            return [
+                'correct' => true,
+                'message' => 'Helyes válasz! Ezt a kvízt már korábban teljesítetted.',
+                'xp_awarded' => 0,
+                'care_points_awarded' => 0,
+                'current_xp' => $user->fresh()->xp_points,
+            ];
+        });
+
+        return response()->json($result);
     }
 }
