@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -44,11 +45,13 @@ class GdprController extends Controller
                     'user_id',
                     'name',
                     'care_points',
+                    'growth_points',
                     'water',
                     'hunger',
                     'happiness',
                     'selected_skin',
                     'last_interaction_at',
+                    'last_decay_at',
                     'created_at',
                     'updated_at'
                 )
@@ -93,6 +96,13 @@ class GdprController extends Controller
 
             $user->delete();
         });
+
+        Auth::guard('web')->logout();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json([
             'message' => 'A fiók és a hozzá kapcsolódó személyes adatok törlése megtörtént.',

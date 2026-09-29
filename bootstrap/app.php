@@ -5,6 +5,7 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\NoStorePrivateResponses;
 use App\Http\Middleware\RejectOversizedRequests;
 use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => IsAdmin::class,
             'active' => EnsureUserIsActive::class,
             'no-store' => NoStorePrivateResponses::class,
+            'verified' => EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

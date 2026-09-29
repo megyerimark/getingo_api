@@ -32,7 +32,10 @@ class AccountController extends Controller
             'current_password' => ['nullable', 'string', 'max:1024'],
         ]);
 
-        if (isset($validated['email']) && $validated['email'] !== $user->email) {
+        $emailChanged = isset($validated['email'])
+            && $validated['email'] !== $user->email;
+
+        if ($emailChanged) {
             if (
                 empty($validated['current_password']) ||
                 !Hash::check($validated['current_password'], $user->password)
@@ -52,15 +55,25 @@ class AccountController extends Controller
 
         $user->save();
 
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
+        }
+
         return response()->json([
-            'message' => 'A fiók adatai sikeresen frissítve.',
+            'message' => $emailChanged
+                ? 'A fiók adatai frissültek. Az új email címre megerősítő levelet küldtünk.'
+                : 'A fiók adatai sikeresen frissítve.',
             'user' => $user->only([
                 'id',
                 'name',
                 'email',
+                'email_verified_at',
                 'role',
+                'is_banned',
                 'xp_points',
                 'current_streak',
+                'created_at',
+                'updated_at',
             ]),
         ]);
     }
@@ -88,7 +101,6 @@ class AccountController extends Controller
         $user->password = $validated['password'];
         $user->save();
 
-        // Jelszóváltás után minden bearer tokent visszavonunk.
         $user->tokens()->delete();
 
         return response()->json([

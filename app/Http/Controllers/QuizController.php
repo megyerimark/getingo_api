@@ -69,13 +69,13 @@ class QuizController extends Controller
             ]);
 
             if ($completion->wasRecentlyCreated) {
-                $this->companionService->awardLearningPoints($user, 5);
+                $this->companionService->awardLearningPoints($user, 1);
 
                 return [
                     'correct' => true,
-                    'message' => 'Helyes válasz! +5 XP és +5 gondozási pont',
-                    'xp_awarded' => 5,
-                    'care_points_awarded' => 5,
+                    'message' => 'Helyes válasz! +1 XP és +1gondozási pont',
+                    'xp_awarded' => 1,
+                    'care_points_awarded' => 1,
                     'current_xp' => $user->fresh()->xp_points,
                 ];
             }

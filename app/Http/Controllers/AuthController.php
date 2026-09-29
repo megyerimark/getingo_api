@@ -33,6 +33,8 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password'])
         ]);
 
+        $user->sendEmailVerificationNotification();
+
         Auth::guard('web')->login($user);
 
         if ($request->hasSession()) {
@@ -40,7 +42,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Sikeres regisztráció!',
+            'message' => 'Sikeres regisztráció! Küldtünk egy emailt a megerősítéshez.',
             'user' => $user
         ], 201);
     }
