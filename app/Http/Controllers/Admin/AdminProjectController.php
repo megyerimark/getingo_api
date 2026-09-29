@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminProjectController extends Controller
 {
@@ -13,7 +14,9 @@ class AdminProjectController extends Controller
     {
         $perPage = min(max($request->integer('per_page', 25), 1), 100);
         $items = Project::query()->latest()->paginate($perPage);
-        $items->getCollection()->transform(fn (Project $project) => $project->makeVisible('solution'));
+        $items->getCollection()->transform(
+            fn (Project $project) => $project->makeVisible(['solution', 'expected_output'])
+        );
 
         return response()->json($items);
     }
@@ -21,7 +24,7 @@ class AdminProjectController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate($this->rules());
-        $project = Project::create($validated)->makeVisible('solution');
+        $project = Project::create($validated)->makeVisible(['solution', 'expected_output']);
 
         AuditLogger::record($request, 'project.created', $project);
 
@@ -33,7 +36,7 @@ class AdminProjectController extends Controller
 
     public function show(Project $project)
     {
-        return response()->json($project->makeVisible('solution'));
+        return response()->json($project->makeVisible(['solution', 'expected_output']));
     }
 
     public function update(Request $request, Project $project)
@@ -47,7 +50,7 @@ class AdminProjectController extends Controller
 
         return response()->json([
             'message' => 'A projekt sikeresen frissítve!',
-            'project' => $project->fresh()->makeVisible('solution'),
+            'project' => $project->fresh()->makeVisible(['solution', 'expected_output']),
         ]);
     }
 
@@ -71,6 +74,16 @@ class AdminProjectController extends Controller
             'difficulty' => [$presence, 'string', 'max:50'],
             'estimated_time' => [$presence, 'integer', 'min:1', 'max:10080'],
             'solution' => ['nullable', 'string', 'max:200000'],
+            'starter_html' => ['nullable', 'string', 'max:200000'],
+            'starter_css' => ['nullable', 'string', 'max:200000'],
+            'starter_javascript' => ['nullable', 'string', 'max:200000'],
+            'validation_type' => [
+                $partial ? 'sometimes' : 'required',
+                'string',
+                Rule::in(['console_exact', 'console_contains']),
+            ],
+            'expected_output' => ['nullable', 'string', 'max:100000'],
+            'xp_reward' => [$partial ? 'sometimes' : 'required', 'integer', 'min:0', 'max:1000'],
         ];
     }
 }

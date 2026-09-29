@@ -38,6 +38,21 @@ class GdprController extends Controller
             'quiz_completions' => $user->quizCompletions()
                 ->select('id', 'user_id', 'quiz_id', 'created_at', 'updated_at')
                 ->get(),
+            'project_submissions' => $user->projectSubmissions()
+                ->select(
+                    'id',
+                    'user_id',
+                    'project_id',
+                    'html_code',
+                    'css_code',
+                    'javascript_code',
+                    'last_console_output',
+                    'completed_at',
+                    'xp_awarded',
+                    'created_at',
+                    'updated_at'
+                )
+                ->get(),
             'companion' => $user->companion()
                 ->select(
                     'id',

@@ -11,35 +11,47 @@ class CompanionService
 {
     private const DECAY_INTERVAL_HOURS = 6;
     private const MIN_STAT = 20;
+    private const MAX_LEVEL = 100;
 
-   private const ACTIONS = [
-    'water' => [
-        'field' => 'water',
-        'cost' => 20,
-        'boost' => 30,
-        'growth' => 12,
-        'label' => 'Itatás',
-        'message' => 'A kis buddy ivott egyet, és újra energikusabb lett.',
-    ],
+    private const ACTIONS = [
+        'water' => [
+            'field' => 'water',
+            'cost' => 20,
+            'boost' => 30,
+            'growth' => 12,
+            'label' => 'Itatás',
+            'message' => 'Pixel ivott egyet, és újra energikusabb lett.',
+        ],
+        'feed' => [
+            'field' => 'hunger',
+            'cost' => 30,
+            'boost' => 30,
+            'growth' => 15,
+            'label' => 'Falatozás',
+            'message' => 'Pixel jóllakott, elégedetten dorombol és fejlődik tovább.',
+        ],
+        'play' => [
+            'field' => 'happiness',
+            'cost' => 25,
+            'boost' => 26,
+            'growth' => 10,
+            'label' => 'Játék',
+            'message' => 'A közös játék feldobta Pixel kedvét, és még ügyesebb lett.',
+        ],
+    ];
 
-    'feed' => [
-        'field' => 'hunger',
-        'cost' => 30,
-        'boost' => 30,
-        'growth' => 15,
-        'label' => 'Falatozás',
-        'message' => 'A buddy jóllakott, elégedetten dorombol és fejlődik tovább.',
-    ],
-
-    'play' => [
-        'field' => 'happiness',
-        'cost' => 25,
-        'boost' => 26,
-        'growth' => 10,
-        'label' => 'Játék',
-        'message' => 'A közös játék feldobta a kedvét, és még ügyesebb lett.',
-    ],
-];
+    private const ERAS = [
+        1 => 'Baby techno cica',
+        2 => 'Kezdő buddy',
+        3 => 'Tanuló cica',
+        4 => 'Fejlődő tech-cica',
+        5 => 'Okos segítő',
+        6 => 'Haladó buddy',
+        7 => 'Elit cica',
+        8 => 'Mester buddy',
+        9 => 'Legendás techno cica',
+        10 => 'Ultimate Getingo Buddy',
+    ];
 
     public function getOrCreate(User $user): UserCompanion
     {
@@ -52,7 +64,7 @@ class CompanionService
                 'water' => 74,
                 'hunger' => 72,
                 'happiness' => 78,
-                'selected_skin' => 'code-kitten',
+                'selected_skin' => 'code-kitten-3d',
                 'last_decay_at' => now(),
             ]
         );
@@ -126,7 +138,7 @@ class CompanionService
         $knowledgeGrowth = intdiv($xp, 2);
         $careGrowth = (int) $companion->growth_points;
         $totalGrowth = $knowledgeGrowth + $careGrowth;
-        $stage = $this->stageForGrowth($totalGrowth, $knowledgeGrowth, $careGrowth);
+        $growth = $this->growthForPoints($totalGrowth, $knowledgeGrowth, $careGrowth);
         $mood = $this->moodForCompanion($companion);
 
         return [
@@ -141,7 +153,7 @@ class CompanionService
                 'selected_skin' => $companion->selected_skin,
                 'last_interaction_at' => $companion->last_interaction_at,
             ],
-            'growth' => $stage,
+            'growth' => $growth,
             'mood' => $mood,
             'xp_points' => $xp,
             'actions' => collect(self::ACTIONS)
@@ -179,45 +191,66 @@ class CompanionService
         $companion->save();
     }
 
-    private function stageForGrowth(int $points, int $knowledgeGrowth, int $careGrowth): array
+    private function growthForPoints(int $points, int $knowledgeGrowth, int $careGrowth): array
     {
-        $stages = [
-            ['key' => 'seed', 'level' => 1, 'name' => 'Kis kódcica', 'min' => 0, 'next' => 50],
-            ['key' => 'sprout', 'level' => 2, 'name' => 'Kíváncsi tanonc', 'min' => 50, 'next' => 150],
-            ['key' => 'budding', 'level' => 3, 'name' => 'Ügyes buddy', 'min' => 150, 'next' => 300],
-            ['key' => 'bloom', 'level' => 4, 'name' => 'Mester segítőtárs', 'min' => 300, 'next' => 600],
-            ['key' => 'legendary', 'level' => 5, 'name' => 'Legendás Getingo Buddy', 'min' => 600, 'next' => null],
-        ];
+        $level = 1;
 
-        $current = $stages[0];
-
-        foreach ($stages as $stage) {
-            if ($points >= $stage['min']) {
-                $current = $stage;
+        for ($candidate = 2; $candidate <= self::MAX_LEVEL; $candidate++) {
+            if ($points < $this->pointsRequiredForLevel($candidate)) {
+                break;
             }
+
+            $level = $candidate;
         }
 
-        if ($current['next'] === null) {
+        $era = min(10, intdiv($level - 1, 10) + 1);
+        $currentLevelPoints = $this->pointsRequiredForLevel($level);
+        $nextLevelPoints = $level >= self::MAX_LEVEL
+            ? null
+            : $this->pointsRequiredForLevel($level + 1);
+
+        if ($nextLevelPoints === null) {
             $progress = 100;
             $pointsToNext = 0;
         } else {
-            $range = $current['next'] - $current['min'];
-            $progress = (int) floor((($points - $current['min']) / $range) * 100);
+            $range = max(1, $nextLevelPoints - $currentLevelPoints);
+            $progress = (int) floor((($points - $currentLevelPoints) / $range) * 100);
             $progress = max(0, min(100, $progress));
-            $pointsToNext = max(0, $current['next'] - $points);
+            $pointsToNext = max(0, $nextLevelPoints - $points);
         }
 
+        $sizePercentage = (int) round(70 + (($level - 1) / 99) * 55);
+
         return [
-            'key' => $current['key'],
-            'level' => $current['level'],
-            'name' => $current['name'],
+            'key' => 'era-'.$era,
+            'level' => $level,
+            'max_level' => self::MAX_LEVEL,
+            'era' => $era,
+            'name' => self::ERAS[$era],
             'progress_percentage' => $progress,
-            'next_stage_points' => $current['next'],
+            'current_level_points' => $currentLevelPoints,
+            'next_level_points' => $nextLevelPoints,
+            'points_to_next_level' => $pointsToNext,
+            // Backwards-compatible fields for the current Angular client.
+            'next_stage_points' => $nextLevelPoints,
             'points_to_next_stage' => $pointsToNext,
             'knowledge_growth_points' => $knowledgeGrowth,
             'care_growth_points' => $careGrowth,
             'total_growth_points' => $points,
+            'size_percentage' => $sizePercentage,
         ];
+    }
+
+    private function pointsRequiredForLevel(int $level): int
+    {
+        if ($level <= 1) {
+            return 0;
+        }
+
+        $step = $level - 1;
+
+        // 1 -> 100 között fokozatosan lassuló, de elérhető fejlődési görbe.
+        return (25 * $step) + intdiv($step * $step, 6);
     }
 
     private function moodForCompanion(UserCompanion $companion): array

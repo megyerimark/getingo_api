@@ -14,7 +14,7 @@ class CompanionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_companion_is_created_from_existing_xp(): void
+    public function test_companion_uses_the_100_level_growth_system(): void
     {
         $user = User::factory()->create(['xp_points' => 120]);
         Sanctum::actingAs($user);
@@ -22,8 +22,10 @@ class CompanionTest extends TestCase
         $this->getJson('/api/companion')
             ->assertOk()
             ->assertJsonPath('companion.care_points', 120)
-            ->assertJsonPath('growth.key', 'sprout')
-            ->assertJsonPath('growth.level', 2)
+            ->assertJsonPath('growth.key', 'era-1')
+            ->assertJsonPath('growth.level', 3)
+            ->assertJsonPath('growth.max_level', 100)
+            ->assertJsonPath('growth.era', 1)
             ->assertJsonPath('growth.knowledge_growth_points', 60)
             ->assertJsonPath('growth.care_growth_points', 0);
     }
@@ -81,7 +83,7 @@ class CompanionTest extends TestCase
         $this->assertSame(12, $companion->growth_points);
     }
 
-    public function test_caring_can_unlock_the_next_visual_stage(): void
+    public function test_caring_can_unlock_the_next_level(): void
     {
         $user = User::factory()->create(['xp_points' => 0]);
         UserCompanion::create([
@@ -98,7 +100,7 @@ class CompanionTest extends TestCase
 
         $this->postJson('/api/companion/action', ['action' => 'water'])
             ->assertOk()
-            ->assertJsonPath('state.growth.key', 'sprout')
+            ->assertJsonPath('state.growth.level', 3)
             ->assertJsonPath('state.growth.total_growth_points', 50);
     }
 
@@ -122,5 +124,19 @@ class CompanionTest extends TestCase
             ->assertJsonPath('companion.water', 62)
             ->assertJsonPath('companion.hunger', 64)
             ->assertJsonPath('companion.happiness', 66);
+    }
+
+    public function test_level_is_capped_at_100(): void
+    {
+        $user = User::factory()->create(['xp_points' => 10000]);
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/companion')
+            ->assertOk()
+            ->assertJsonPath('growth.level', 100)
+            ->assertJsonPath('growth.era', 10)
+            ->assertJsonPath('growth.key', 'era-10')
+            ->assertJsonPath('growth.progress_percentage', 100)
+            ->assertJsonPath('growth.next_level_points', null);
     }
 }

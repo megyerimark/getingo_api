@@ -11,7 +11,6 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\VerifyEmailNotification;
 
-
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -62,8 +61,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(UserCompanion::class);
     }
+
+    public function projectSubmissions(): HasMany
+    {
+        return $this->hasMany(ProjectSubmission::class);
+    }
+
     public function sendEmailVerificationNotification(): void
-{
-    $this->notify(new VerifyEmailNotification());
-}
+    {
+        $this->notify(new VerifyEmailNotification());
+    }
 }

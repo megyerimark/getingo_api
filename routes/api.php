@@ -22,6 +22,7 @@ use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Student\LessonController;
+use App\Http\Controllers\Student\ProjectController;
 use App\Http\Controllers\StudentDashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +71,15 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
     Route::middleware('verified')->group(function () {
         Route::get('/dashboard', [StudentDashboardController::class, 'index']);
+
+        Route::get('/projects', [ProjectController::class, 'index']);
+        Route::get('/projects/{project}', [ProjectController::class, 'show'])
+            ->whereNumber('project');
+        Route::put('/projects/{project}/workspace', [ProjectController::class, 'saveWorkspace'])
+            ->whereNumber('project');
+        Route::post('/projects/{project}/check', [ProjectController::class, 'check'])
+            ->whereNumber('project')
+            ->middleware('throttle:quiz');
 
         Route::get('/companion', [CompanionController::class, 'show']);
         Route::post('/companion/action', [CompanionController::class, 'action']);
