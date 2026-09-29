@@ -31,12 +31,12 @@ class ProgressController extends Controller
             );
 
             if ($progress->wasRecentlyCreated) {
-                $this->companionService->awardLearningPoints($user, 1);
+                $this->companionService->awardLearningPoints($user, 10);
                 $message = 'Lecke teljesítve! +10 XP és +10 gondozási pont';
             } else {
                 if (!$progress->completed) {
                     $progress->update(['completed' => true]);
-                    $this->companionService->awardLearningPoints($user, 1);
+                    $this->companionService->awardLearningPoints($user, 10);
                     $message = 'Lecke teljesítve! +10 XP és +10 gondozási pont';
                 } else {
                     $message = 'Ezt a leckét már korábban teljesítetted.';
