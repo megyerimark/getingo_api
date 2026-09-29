@@ -273,4 +273,57 @@ class CompanionService
 
         return ['key' => 'wilted', 'name' => 'Álmos', 'score' => $score];
     }
+    private function stageForGrowth(int $points, int $knowledgeGrowth, int $careGrowth): array
+{
+    $pointsPerLevel = 12;
+
+    $level = min(100, max(1, (int) floor($points / $pointsPerLevel) + 1));
+    $era = min(10, (int) ceil($level / 10));
+
+    $eraNames = [
+        1 => 'Kódmancs kölyök',
+        2 => 'Kíváncsi tanonc',
+        3 => 'Digitális felfedező',
+        4 => 'Techno cica',
+        5 => 'Okos segítőtárs',
+        6 => 'Haladó buddy',
+        7 => 'Elit kódcica',
+        8 => 'Mester segítőtárs',
+        9 => 'Legendás techno macska',
+        10 => 'Ultimate Getingo Buddy',
+    ];
+
+    $levelMinPoints = ($level - 1) * $pointsPerLevel;
+    $nextLevelPoints = $level < 100 ? $level * $pointsPerLevel : null;
+
+    if ($nextLevelPoints === null) {
+        $levelProgress = 100;
+        $pointsToNextLevel = 0;
+    } else {
+        $levelProgress = (int) floor((($points - $levelMinPoints) / $pointsPerLevel) * 100);
+        $levelProgress = max(0, min(100, $levelProgress));
+        $pointsToNextLevel = max(0, $nextLevelPoints - $points);
+    }
+
+    $eraStartLevel = (($era - 1) * 10) + 1;
+    $eraEndLevel = min($era * 10, 100);
+    $eraLevelSpan = max(1, $eraEndLevel - $eraStartLevel + 1);
+    $eraProgress = (int) floor((($level - $eraStartLevel + 1) / $eraLevelSpan) * 100);
+    $eraProgress = max(0, min(100, $eraProgress));
+
+    return [
+        'key' => 'level-' . $level,
+        'level' => $level,
+        'name' => $eraNames[$era],
+        'era' => $era,
+        'era_name' => $eraNames[$era],
+        'progress_percentage' => $levelProgress,
+        'era_progress_percentage' => $eraProgress,
+        'next_stage_points' => $nextLevelPoints,
+        'points_to_next_stage' => $pointsToNextLevel,
+        'knowledge_growth_points' => $knowledgeGrowth,
+        'care_growth_points' => $careGrowth,
+        'total_growth_points' => $points,
+    ];
+}
 }
