@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(RejectOversizedRequests::class);
         $middleware->append(SecurityHeaders::class);
+        $middleware->statefulApi();
 
         $middleware->alias([
             'admin' => IsAdmin::class,

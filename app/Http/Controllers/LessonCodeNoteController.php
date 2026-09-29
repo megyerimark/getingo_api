@@ -16,15 +16,18 @@ class LessonCodeNoteController extends Controller
 
         return response()->json([
             'saved' => (bool) $personalCode,
-            'code' => $personalCode?->code ?? $lesson->example_code ?? '',
-            'updated_at' => $personalCode?->updated_at
+            'html' => $personalCode?->html_code ?? $lesson->example_html ?? '',
+            'css' => $personalCode?->css_code ?? $lesson->example_css ?? '',
+            'javascript' => $personalCode?->javascript_code ?? $lesson->example_javascript ?? ''
         ]);
     }
 
     public function update(Request $request, Lesson $lesson)
     {
         $validated = $request->validate([
-            'code' => 'present|nullable|string|max:100000'
+            'html' => 'present|nullable|string|max:100000',
+            'css' => 'present|nullable|string|max:100000',
+            'javascript' => 'present|nullable|string|max:100000'
         ]);
 
         $personalCode = LessonCodeNote::updateOrCreate(
@@ -33,14 +36,18 @@ class LessonCodeNoteController extends Controller
                 'lesson_id' => $lesson->id
             ],
             [
-                'code' => $validated['code'] ?? ''
+                'html_code' => $validated['html'] ?? '',
+                'css_code' => $validated['css'] ?? '',
+                'javascript_code' => $validated['javascript'] ?? ''
             ]
         );
 
         return response()->json([
             'message' => 'Saját kód elmentve!',
-            'code' => $personalCode->code,
-            'saved' => true
+            'saved' => true,
+            'html' => $personalCode->html_code,
+            'css' => $personalCode->css_code,
+            'javascript' => $personalCode->javascript_code
         ]);
     }
 
@@ -52,8 +59,10 @@ class LessonCodeNoteController extends Controller
 
         return response()->json([
             'message' => 'Saját kód visszaállítva az eredetire.',
-            'code' => $lesson->example_code ?? '',
-            'saved' => false
+            'saved' => false,
+            'html' => $lesson->example_html ?? '',
+            'css' => $lesson->example_css ?? '',
+            'javascript' => $lesson->example_javascript ?? ''
         ]);
     }
 }

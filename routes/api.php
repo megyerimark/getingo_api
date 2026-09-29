@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\LessonCodeNoteController;
 
+
 Route::middleware('throttle:public-api')->group(function () {
     Route::get('/kategoriak', [CategoryController::class, 'index']);
     Route::get('/categories', [CategoryController::class, 'index']);
@@ -40,18 +41,22 @@ Route::get('/search', [SearchController::class, 'index'])
     ->middleware('throttle:search');
 
 Route::post('/regisztracio', [AuthController::class, 'register'])
-    ->middleware(['throttle:register', 'no-store']);
+    ->middleware('throttle:register');
 
 Route::post('/bejelentkezes', [AuthController::class, 'login'])
-    ->middleware(['throttle:login', 'no-store']);
+    ->middleware('throttle:login');
 
-Route::middleware(['auth:sanctum', 'active', 'throttle:user-api', 'no-store'])->group(function () {
+
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [StudentDashboardController::class, 'index']);
     Route::patch('/account', [AccountController::class, 'update']);
     Route::put('/account/password', [AccountController::class, 'changePassword'])
         ->middleware('throttle:gdpr');
+        Route::get('/lessons/{lesson}/personal-code', [LessonCodeNoteController::class, 'show']);
+Route::put('/lessons/{lesson}/personal-code', [LessonCodeNoteController::class, 'update']);
+Route::delete('/lessons/{lesson}/personal-code', [LessonCodeNoteController::class, 'destroy']);
 
     Route::apiResource('notes', NoteController::class);
     Route::post('/progress', [ProgressController::class, 'complete']);
@@ -77,8 +82,12 @@ Route::middleware([
     'throttle:admin-api',
     'no-store',
 ])->prefix('admin')->group(function () {
+    
+    
     Route::get('/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/dashboard-stats', [AdminDashboardController::class, 'stats']);
+    Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+    
 
     Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
 

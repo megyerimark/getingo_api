@@ -4,80 +4,81 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
-use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class AdminLessonController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $perPage = min(max($request->integer('per_page', 25), 1), 100);
-
         return response()->json(
-            Lesson::query()->with('category:id,name,slug')->latest()->paginate($perPage)
+            Lesson::with('category:id,name')
+                ->orderBy('category_id')
+                ->orderBy('id')
+                ->get()
         );
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate($this->rules());
-        $lesson = Lesson::create($validated);
+        $validated = $request->validate([
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:lessons,slug'],
+            'content' => ['required', 'string'],
+            'example_code' => ['nullable', 'string'],
+            'example_html' => ['nullable', 'string', 'max:100000'],
+            'example_css' => ['nullable', 'string', 'max:100000'],
+            'example_javascript' => ['nullable', 'string', 'max:100000']
+        ]);
 
-        AuditLogger::record($request, 'lesson.created', $lesson);
+        $lesson = Lesson::create($validated);
 
         return response()->json([
             'message' => 'A lecke sikeresen létrehozva!',
-            'lesson' => $lesson,
+            'lesson' => $lesson
         ], 201);
     }
 
     public function show(Lesson $lesson)
     {
-        return response()->json($lesson->load('category:id,name,slug'));
+        return response()->json(
+            $lesson->load('category:id,name')
+        );
     }
 
     public function update(Request $request, Lesson $lesson)
     {
-        $validated = $request->validate($this->rules($lesson, true));
-        $lesson->update($validated);
-
-        AuditLogger::record($request, 'lesson.updated', $lesson, [
-            'changed_fields' => array_keys($validated),
+        $validated = $request->validate([
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'slug' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('lessons', 'slug')->ignore($lesson->id)
+            ],
+            'content' => ['required', 'string'],
+            'example_code' => ['nullable', 'string'],
+            'example_html' => ['nullable', 'string', 'max:100000'],
+            'example_css' => ['nullable', 'string', 'max:100000'],
+            'example_javascript' => ['nullable', 'string', 'max:100000']
         ]);
+
+        $lesson->update($validated);
 
         return response()->json([
             'message' => 'A lecke sikeresen frissítve!',
-            'lesson' => $lesson->fresh(),
+            'lesson' => $lesson->fresh()
         ]);
     }
 
-    public function destroy(Request $request, Lesson $lesson)
+    public function destroy(Lesson $lesson)
     {
-        AuditLogger::record($request, 'lesson.deleted', $lesson);
         $lesson->delete();
 
         return response()->json([
-            'message' => 'A lecke sikeresen törölve!',
+            'message' => 'A lecke sikeresen törölve!'
         ]);
-    }
-
-    private function rules(?Lesson $lesson = null, bool $partial = false): array
-    {
-        $presence = $partial ? 'sometimes' : 'required';
-
-        return [
-            'category_id' => [$presence, 'integer', 'exists:categories,id'],
-            'title' => [$presence, 'string', 'max:255'],
-            'slug' => [
-                $presence,
-                'string',
-                'max:255',
-                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-                Rule::unique('lessons', 'slug')->ignore($lesson?->id),
-            ],
-            'content' => [$presence, 'string', 'max:200000'],
-            'example_code' => ['nullable', 'string', 'max:200000'],
-        ];
     }
 }

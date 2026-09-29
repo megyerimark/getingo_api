@@ -8,16 +8,26 @@ use App\Models\Lesson;
 
 class LessonController extends Controller
 {
-    public function index(int $category_id)
+ public function index($categoryId)
     {
-        Category::findOrFail($category_id);
-
-        $lessons = Lesson::query()
-            ->where('category_id', $category_id)
-            ->select('id', 'category_id', 'title', 'slug', 'content', 'example_code', 'created_at', 'updated_at')
+        $lessons = Lesson::where('category_id', $categoryId)
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->map(function ($lesson) {
+                return [
+                    'id' => $lesson->id,
+                    'category_id' => $lesson->category_id,
+                    'title' => $lesson->title,
+                    'slug' => $lesson->slug,
+                    'content' => $lesson->content,
+                    'example_code' => $lesson->example_code,
+                    'example_html' => $lesson->example_html,
+                    'example_css' => $lesson->example_css,
+                    'example_javascript' => $lesson->example_javascript
+                ];
+            });
 
         return response()->json($lessons);
     }
+        
 }

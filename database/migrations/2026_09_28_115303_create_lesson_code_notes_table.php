@@ -12,7 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lesson_id')->constrained()->cascadeOnDelete();
-            $table->longText('code')->nullable();
+            $table->longText('html_code')->nullable();
+            $table->longText('css_code')->nullable();
+            $table->longText('javascript_code')->nullable();
             $table->timestamps();
             $table->unique(['user_id', 'lesson_id']);
         });
