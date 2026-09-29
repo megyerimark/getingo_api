@@ -42,8 +42,8 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Sikeres regisztráció! Küldtünk egy emailt a megerősítéshez.',
-            'user' => $user
+            'message' => 'Sikeres regisztráció! Küldtünk egy megerősítő emailt.',
+            'user' => $user->fresh()
         ], 201);
     }
 
@@ -83,7 +83,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Sikeres bejelentkezés!',
-            'user' => $user
+            'user' => $user->fresh()
         ], 200);
     }
 

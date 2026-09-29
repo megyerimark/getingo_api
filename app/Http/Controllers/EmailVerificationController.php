@@ -4,32 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class EmailVerificationController extends Controller
 {
-    public function verify(Request $request, int $id, string $hash): RedirectResponse
+    public function verify(Request $request, int $id, string $hash)
     {
+        if (! $request->hasValidSignature()) {
+            abort(403, 'Érvénytelen vagy lejárt megerősítő link.');
+        }
+
         $user = User::findOrFail($id);
 
-        abort_unless(
-            hash_equals($hash, sha1($user->getEmailForVerification())),
-            Response::HTTP_FORBIDDEN
-        );
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            abort(403, 'Érvénytelen megerősítő link.');
+        }
 
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
             event(new Verified($user));
         }
 
-        $frontendUrl = rtrim(
-            (string) config('app.frontend_url', config('app.url')),
-            '/'
-        );
+        $frontendUrl = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', config('app.url'))), '/');
 
-        return redirect()->away($frontendUrl.'/email-verified');
+        return redirect()->away($frontendUrl . '/email-verified');
     }
 
     public function resend(Request $request)
@@ -38,7 +36,7 @@ class EmailVerificationController extends Controller
 
         if ($user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'Az email címed már meg van erősítve.',
+                'message' => 'Az email cím már meg van erősítve.',
                 'verified' => true,
             ]);
         }

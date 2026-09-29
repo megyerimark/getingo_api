@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -71,7 +70,7 @@ class GdprController extends Controller
 
         $user = $request->user();
 
-        if (!Hash::check($validated['password'], $user->password)) {
+        if (! Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'message' => 'A megadott jelszó hibás.',
             ], 422);
@@ -96,13 +95,6 @@ class GdprController extends Controller
 
             $user->delete();
         });
-
-        Auth::guard('web')->logout();
-
-        if ($request->hasSession()) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-        }
 
         return response()->json([
             'message' => 'A fiók és a hozzá kapcsolódó személyes adatok törlése megtörtént.',

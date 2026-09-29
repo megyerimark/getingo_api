@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\LessonProgress;
-use Illuminate\Http\Request;
 use App\Services\CompanionService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProgressController extends Controller
@@ -32,12 +32,12 @@ class ProgressController extends Controller
 
             if ($progress->wasRecentlyCreated) {
                 $this->companionService->awardLearningPoints($user, 10);
-                $message = 'Lecke teljesítve! +10 XP és +10 gondozási pont';
+                $message = 'Lecke teljesítve! +10 XP';
             } else {
                 if (!$progress->completed) {
                     $progress->update(['completed' => true]);
                     $this->companionService->awardLearningPoints($user, 10);
-                    $message = 'Lecke teljesítve! +10 XP és +10 gondozási pont';
+                    $message = 'Lecke teljesítve! +10 XP';
                 } else {
                     $message = 'Ezt a leckét már korábban teljesítetted.';
                 }

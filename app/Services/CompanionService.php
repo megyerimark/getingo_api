@@ -10,47 +10,49 @@ use Illuminate\Validation\ValidationException;
 class CompanionService
 {
     private const DECAY_INTERVAL_HOURS = 6;
-    private const MIN_STAT = 25;
+    private const MIN_STAT = 20;
 
-    private const ACTIONS = [
-        'water' => [
-            'field' => 'water',
-            'cost' => 20,
-            'boost' => 30,
-            'growth' => 12,
-            'label' => 'Öntözés',
-            'message' => 'Kódmag felfrissült a víztől és egy kicsit növekedett.',
-        ],
-        'feed' => [
-            'field' => 'hunger',
-            'cost' => 30,
-            'boost' => 30,
-            'growth' => 15,
-            'label' => 'Etetés',
-            'message' => 'Kódmag jóllakott, és új energiát kapott a növekedéshez.',
-        ],
-        'play' => [
-            'field' => 'happiness',
-            'cost' => 25,
-            'boost' => 25,
-            'growth' => 10,
-            'label' => 'Játék',
-            'message' => 'Kódmag jobb kedvre derült és ragyogóbb lett.',
-        ],
-    ];
+   private const ACTIONS = [
+    'water' => [
+        'field' => 'water',
+        'cost' => 20,
+        'boost' => 30,
+        'growth' => 12,
+        'label' => 'Itatás',
+        'message' => 'A kis buddy ivott egyet, és újra energikusabb lett.',
+    ],
+
+    'feed' => [
+        'field' => 'hunger',
+        'cost' => 30,
+        'boost' => 30,
+        'growth' => 15,
+        'label' => 'Falatozás',
+        'message' => 'A buddy jóllakott, elégedetten dorombol és fejlődik tovább.',
+    ],
+
+    'play' => [
+        'field' => 'happiness',
+        'cost' => 25,
+        'boost' => 26,
+        'growth' => 10,
+        'label' => 'Játék',
+        'message' => 'A közös játék feldobta a kedvét, és még ügyesebb lett.',
+    ],
+];
 
     public function getOrCreate(User $user): UserCompanion
     {
         return UserCompanion::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'name' => 'Kódmag',
+                'name' => 'Pixel',
                 'care_points' => max(0, (int) $user->xp_points),
                 'growth_points' => 0,
-                'water' => 70,
-                'hunger' => 70,
-                'happiness' => 70,
-                'selected_skin' => 'azure-sprout',
+                'water' => 74,
+                'hunger' => 72,
+                'happiness' => 78,
+                'selected_skin' => 'code-kitten',
                 'last_decay_at' => now(),
             ]
         );
@@ -180,11 +182,11 @@ class CompanionService
     private function stageForGrowth(int $points, int $knowledgeGrowth, int $careGrowth): array
     {
         $stages = [
-            ['key' => 'seed', 'level' => 1, 'name' => 'Kódmag', 'min' => 0, 'next' => 50],
-            ['key' => 'sprout', 'level' => 2, 'name' => 'Kis hajtás', 'min' => 50, 'next' => 150],
-            ['key' => 'budding', 'level' => 3, 'name' => 'Bimbózó Kódvirág', 'min' => 150, 'next' => 300],
-            ['key' => 'bloom', 'level' => 4, 'name' => 'Virágzó Kódvirág', 'min' => 300, 'next' => 600],
-            ['key' => 'legendary', 'level' => 5, 'name' => 'Legendás Kódvirág', 'min' => 600, 'next' => null],
+            ['key' => 'seed', 'level' => 1, 'name' => 'Kis kódcica', 'min' => 0, 'next' => 50],
+            ['key' => 'sprout', 'level' => 2, 'name' => 'Kíváncsi tanonc', 'min' => 50, 'next' => 150],
+            ['key' => 'budding', 'level' => 3, 'name' => 'Ügyes buddy', 'min' => 150, 'next' => 300],
+            ['key' => 'bloom', 'level' => 4, 'name' => 'Mester segítőtárs', 'min' => 300, 'next' => 600],
+            ['key' => 'legendary', 'level' => 5, 'name' => 'Legendás Getingo Buddy', 'min' => 600, 'next' => null],
         ];
 
         $current = $stages[0];
@@ -229,13 +231,13 @@ class CompanionService
         }
 
         if ($score >= 65) {
-            return ['key' => 'happy', 'name' => 'Boldog', 'score' => $score];
+            return ['key' => 'happy', 'name' => 'Vidám', 'score' => $score];
         }
 
         if ($score >= 45) {
-            return ['key' => 'calm', 'name' => 'Pihenő', 'score' => $score];
+            return ['key' => 'calm', 'name' => 'Nyugodt', 'score' => $score];
         }
 
-        return ['key' => 'wilted', 'name' => 'Kókadozó', 'score' => $score];
+        return ['key' => 'wilted', 'name' => 'Álmos', 'score' => $score];
     }
 }

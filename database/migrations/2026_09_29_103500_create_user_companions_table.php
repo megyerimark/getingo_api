@@ -11,12 +11,12 @@ return new class extends Migration
         Schema::create('user_companions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
-            $table->string('name', 40)->default('Kódmag');
+            $table->string('name', 40)->default('Pixel');
             $table->unsignedInteger('care_points')->default(0);
             $table->unsignedTinyInteger('water')->default(70);
             $table->unsignedTinyInteger('hunger')->default(70);
             $table->unsignedTinyInteger('happiness')->default(70);
-            $table->string('selected_skin', 50)->default('azure-sprout');
+            $table->string('selected_skin', 50)->default('code-kitten');
             $table->timestamp('last_interaction_at')->nullable();
             $table->timestamps();
         });

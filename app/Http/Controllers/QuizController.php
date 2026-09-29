@@ -6,7 +6,6 @@ use App\Models\Quiz;
 use App\Models\QuizCompletion;
 use App\Services\CompanionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class QuizController extends Controller
 {
@@ -62,33 +61,27 @@ class QuizController extends Controller
 
         $user = $request->user();
 
-        $result = DB::transaction(function () use ($user, $quiz): array {
-            $completion = QuizCompletion::firstOrCreate([
-                'user_id' => $user->id,
-                'quiz_id' => $quiz->id
-            ]);
+        $completion = QuizCompletion::firstOrCreate([
+            'user_id' => $user->id,
+            'quiz_id' => $quiz->id
+        ]);
 
-            if ($completion->wasRecentlyCreated) {
-                $this->companionService->awardLearningPoints($user, 1);
+        if ($completion->wasRecentlyCreated) {
+            $this->companionService->awardLearningPoints($user, 5);
 
-                return [
-                    'correct' => true,
-                    'message' => 'Helyes válasz! +1 XP és +1gondozási pont',
-                    'xp_awarded' => 1,
-                    'care_points_awarded' => 1,
-                    'current_xp' => $user->fresh()->xp_points,
-                ];
-            }
-
-            return [
+            return response()->json([
                 'correct' => true,
-                'message' => 'Helyes válasz! Ezt a kvízt már korábban teljesítetted.',
-                'xp_awarded' => 0,
-                'care_points_awarded' => 0,
-                'current_xp' => $user->fresh()->xp_points,
-            ];
-        });
+                'message' => 'Helyes válasz! +5 XP',
+                'xp_awarded' => 5,
+                'current_xp' => $user->fresh()->xp_points
+            ]);
+        }
 
-        return response()->json($result);
+        return response()->json([
+            'correct' => true,
+            'message' => 'Helyes válasz! Ezt a kvízt már korábban teljesítetted.',
+            'xp_awarded' => 0,
+            'current_xp' => $user->xp_points
+        ]);
     }
 }

@@ -12,87 +12,49 @@ class AccountController extends Controller
 {
     public function update(Request $request)
     {
-        if ($request->has('email')) {
-            $request->merge([
-                'email' => Str::lower(trim((string) $request->input('email'))),
-            ]);
-        }
-
         $user = $request->user();
+        $originalEmail = $user->email;
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:100'],
-            'email' => [
-                'sometimes',
-                'required',
-                'email:rfc',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'current_password' => ['nullable', 'string', 'max:1024'],
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->email)),
         ]);
 
-        $emailChanged = isset($validated['email'])
-            && $validated['email'] !== $user->email;
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+        ]);
 
-        if ($emailChanged) {
-            if (
-                empty($validated['current_password']) ||
-                !Hash::check($validated['current_password'], $user->password)
-            ) {
-                return response()->json([
-                    'message' => 'Az email cím módosításához add meg a jelenlegi jelszavadat.',
-                ], 422);
-            }
+        $user->name = trim($validated['name']);
+        $user->email = $validated['email'];
 
-            $user->email = $validated['email'];
+        if ($originalEmail !== $validated['email']) {
             $user->email_verified_at = null;
-        }
-
-        if (isset($validated['name'])) {
-            $user->name = strip_tags($validated['name']);
         }
 
         $user->save();
 
-        if ($emailChanged) {
+        if ($originalEmail !== $validated['email']) {
             $user->sendEmailVerificationNotification();
         }
 
         return response()->json([
-            'message' => $emailChanged
-                ? 'A fiók adatai frissültek. Az új email címre megerősítő levelet küldtünk.'
-                : 'A fiók adatai sikeresen frissítve.',
-            'user' => $user->only([
-                'id',
-                'name',
-                'email',
-                'email_verified_at',
-                'role',
-                'is_banned',
-                'xp_points',
-                'current_streak',
-                'created_at',
-                'updated_at',
-            ]),
+            'message' => $originalEmail !== $validated['email']
+                ? 'A profil frissült. Az új email cím megerősítéséhez elküldtük a linket.'
+                : 'A profil frissítése sikerült.',
+            'user' => $user->fresh(),
         ]);
     }
 
     public function changePassword(Request $request)
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'string', 'max:1024'],
-            'password' => [
-                'required',
-                'string',
-                'confirmed',
-                Password::min(12)->mixedCase()->numbers(),
-            ],
-        ]);
-
         $user = $request->user();
 
-        if (!Hash::check($validated['current_password'], $user->password)) {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()],
+        ]);
+
+        if (! Hash::check($validated['current_password'], $user->password)) {
             return response()->json([
                 'message' => 'A jelenlegi jelszó hibás.',
             ], 422);
@@ -101,10 +63,8 @@ class AccountController extends Controller
         $user->password = $validated['password'];
         $user->save();
 
-        $user->tokens()->delete();
-
         return response()->json([
-            'message' => 'A jelszó sikeresen megváltozott. Jelentkezz be újra.',
+            'message' => 'A jelszó módosítása sikerült.',
         ]);
     }
 }

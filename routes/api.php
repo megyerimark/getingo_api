@@ -57,38 +57,41 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->middleware('throttle:6,1');
 
     Route::patch('/account', [AccountController::class, 'update']);
+
     Route::put('/account/password', [AccountController::class, 'changePassword'])
         ->middleware('throttle:gdpr');
 
+    // GDPR - email megerősítés nélkül is elérhető legyen
     Route::get('/gdpr/export', [GdprController::class, 'exportData'])
         ->middleware('throttle:gdpr');
+
     Route::delete('/gdpr/delete-account', [GdprController::class, 'deleteAccount'])
         ->middleware('throttle:gdpr');
 
     Route::middleware('verified')->group(function () {
         Route::get('/dashboard', [StudentDashboardController::class, 'index']);
 
-        Route::get('/companion', [CompanionController::class, 'show'])
-            ->middleware('throttle:user-api');
-        Route::post('/companion/action', [CompanionController::class, 'action'])
-            ->middleware('throttle:user-api');
+        Route::get('/companion', [CompanionController::class, 'show']);
+        Route::post('/companion/action', [CompanionController::class, 'action']);
+
+        Route::apiResource('notes', NoteController::class);
+
+        Route::post('/progress', [ProgressController::class, 'complete']);
+
+        Route::post('/favorites/toggle', [FavoriteController::class, 'toggle']);
+
+        Route::post('/quizzes/{quiz}/submit', [QuizController::class, 'submit'])
+            ->middleware('throttle:quiz');
 
         Route::get('/lessons/{lesson}/personal-code', [LessonCodeNoteController::class, 'show']);
         Route::put('/lessons/{lesson}/personal-code', [LessonCodeNoteController::class, 'update']);
         Route::delete('/lessons/{lesson}/personal-code', [LessonCodeNoteController::class, 'destroy']);
-
-        Route::apiResource('notes', NoteController::class);
-        Route::post('/progress', [ProgressController::class, 'complete']);
-        Route::post('/favorites/toggle', [FavoriteController::class, 'toggle']);
-        Route::post('/quizzes/{quiz}/submit', [QuizController::class, 'submit'])
-            ->middleware('throttle:quiz');
     });
 });
 
 Route::middleware([
     'auth:sanctum',
     'active',
-    'verified',
     'admin',
     'throttle:admin-api',
     'no-store',
@@ -98,10 +101,8 @@ Route::middleware([
     Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
 
     Route::get('/users', [AdminUserController::class, 'index']);
-    Route::patch('/users/{id}/role', [AdminUserController::class, 'updateRole'])
-        ->whereNumber('id');
-    Route::post('/users/{id}/toggle-ban', [AdminUserController::class, 'toggleBan'])
-        ->whereNumber('id');
+    Route::patch('/users/{id}/role', [AdminUserController::class, 'updateRole'])->whereNumber('id');
+    Route::post('/users/{id}/toggle-ban', [AdminUserController::class, 'toggleBan'])->whereNumber('id');
 
     Route::apiResource('lessons', AdminLessonController::class);
     Route::apiResource('exercises', AdminExerciseController::class);
