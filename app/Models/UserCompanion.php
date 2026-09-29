@@ -11,21 +11,25 @@ class UserCompanion extends Model
         'user_id',
         'name',
         'care_points',
+        'growth_points',
         'water',
         'hunger',
         'happiness',
         'selected_skin',
         'last_interaction_at',
+        'last_decay_at',
     ];
 
     protected function casts(): array
     {
         return [
             'care_points' => 'integer',
+            'growth_points' => 'integer',
             'water' => 'integer',
             'hunger' => 'integer',
             'happiness' => 'integer',
             'last_interaction_at' => 'datetime',
+            'last_decay_at' => 'datetime',
         ];
     }
 
