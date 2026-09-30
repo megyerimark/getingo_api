@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
+use App\Http\Controllers\Admin\AdminBillingController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminExerciseController;
 use App\Http\Controllers\Admin\AdminLessonController;
+use App\Http\Controllers\Admin\AdminLessonSectionController;
 use App\Http\Controllers\Admin\AdminProjectController;
 use App\Http\Controllers\Admin\AdminQuizController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -32,6 +34,8 @@ Route::middleware('throttle:public-api')->group(function () {
     Route::get('/kategoriak', [CategoryController::class, 'index']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{category_id}/lessons', [LessonController::class, 'index'])
+        ->whereNumber('category_id');
+    Route::get('/categories/{category_id}/curriculum', [LessonController::class, 'curriculum'])
         ->whereNumber('category_id');
     Route::get('/lessons/{lessonId}/quizzes', [QuizController::class, 'byLesson'])
         ->whereNumber('lessonId');
@@ -98,6 +102,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
         Route::get('/companion', [CompanionController::class, 'show']);
         Route::post('/companion/action', [CompanionController::class, 'action']);
+        Route::patch('/companion/preferences', [CompanionController::class, 'preferences']);
 
         Route::apiResource('notes', NoteController::class);
 
@@ -124,11 +129,15 @@ Route::middleware([
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
     Route::get('/dashboard-stats', [AdminDashboardController::class, 'stats']);
     Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
+    Route::get('/subscriptions', [AdminBillingController::class, 'subscriptions']);
+    Route::get('/revenue', [AdminBillingController::class, 'revenue']);
+    Route::post('/revenue/sync', [AdminBillingController::class, 'syncStripe'])->middleware('throttle:6,1');
 
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::patch('/users/{id}/role', [AdminUserController::class, 'updateRole'])->whereNumber('id');
     Route::post('/users/{id}/toggle-ban', [AdminUserController::class, 'toggleBan'])->whereNumber('id');
 
+    Route::apiResource('lesson-sections', AdminLessonSectionController::class);
     Route::apiResource('lessons', AdminLessonController::class);
     Route::apiResource('exercises', AdminExerciseController::class);
     Route::apiResource('projects', AdminProjectController::class);

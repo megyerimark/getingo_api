@@ -11,6 +11,7 @@ class CategoryController extends Controller
         return response()->json(
             Category::query()
                 ->select('id', 'name', 'slug', 'sort_order')
+                ->withCount(['lessons', 'lessonSections'])
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get()

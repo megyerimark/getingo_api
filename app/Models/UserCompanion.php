@@ -16,6 +16,7 @@ class UserCompanion extends Model
         'hunger',
         'happiness',
         'selected_skin',
+        'selected_room',
         'last_interaction_at',
         'last_decay_at',
     ];

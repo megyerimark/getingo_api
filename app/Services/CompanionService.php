@@ -13,6 +13,15 @@ class CompanionService
     private const MIN_STAT = 20;
     private const MAX_LEVEL = 100;
 
+    private const ROOMS = ['studio', 'play', 'night'];
+
+    private const SKINS = [
+        'code-kitten-3d' => ['name' => 'Code Kitten', 'premium' => false],
+        'arctic-byte' => ['name' => 'Arctic Byte', 'premium' => false],
+        'neon-orbit' => ['name' => 'Neon Orbit', 'premium' => true],
+        'royal-circuit' => ['name' => 'Royal Circuit', 'premium' => true],
+    ];
+
     private const ACTIONS = [
         'water' => [
             'field' => 'water',
@@ -65,6 +74,7 @@ class CompanionService
                 'hunger' => 72,
                 'happiness' => 78,
                 'selected_skin' => 'code-kitten-3d',
+                'selected_room' => 'studio',
                 'last_decay_at' => now(),
             ]
         );
@@ -131,6 +141,14 @@ class CompanionService
     public function state(User $user, ?UserCompanion $companion = null): array
     {
         $companion ??= $this->getOrCreate($user);
+
+        if (! $user->is_premium
+            && isset(self::SKINS[$companion->selected_skin])
+            && self::SKINS[$companion->selected_skin]['premium']) {
+            $companion->selected_skin = 'code-kitten-3d';
+            $companion->save();
+        }
+
         $this->applyDecay($companion);
         $companion->refresh();
 
@@ -151,11 +169,21 @@ class CompanionService
                 'hunger' => $companion->hunger,
                 'happiness' => $companion->happiness,
                 'selected_skin' => $companion->selected_skin,
+                'selected_room' => $companion->selected_room ?? 'studio',
                 'last_interaction_at' => $companion->last_interaction_at,
             ],
             'growth' => $growth,
             'mood' => $mood,
             'xp_points' => $xp,
+            'available_skins' => collect(self::SKINS)
+                ->map(fn (array $skin, string $key) => [
+                    'key' => $key,
+                    'name' => $skin['name'],
+                    'premium' => $skin['premium'],
+                    'unlocked' => ! $skin['premium'] || $user->is_premium,
+                ])
+                ->values(),
+            'available_rooms' => self::ROOMS,
             'actions' => collect(self::ACTIONS)
                 ->map(fn (array $config, string $key) => [
                     'key' => $key,
@@ -166,6 +194,33 @@ class CompanionService
                 ])
                 ->values(),
         ];
+    }
+
+
+    public function updatePreferences(User $user, ?string $room, ?string $skin): array
+    {
+        $companion = $this->getOrCreate($user);
+
+        if ($room !== null) {
+            if (! in_array($room, self::ROOMS, true)) {
+                throw ValidationException::withMessages(['room' => 'Ismeretlen Buddy szoba.']);
+            }
+            $companion->selected_room = $room;
+        }
+
+        if ($skin !== null) {
+            if (! array_key_exists($skin, self::SKINS)) {
+                throw ValidationException::withMessages(['skin' => 'Ismeretlen Buddy skin.']);
+            }
+            if (self::SKINS[$skin]['premium'] && ! $user->is_premium) {
+                throw ValidationException::withMessages(['skin' => 'Ez a skin Premium előfizetéshez tartozik.']);
+            }
+            $companion->selected_skin = $skin;
+        }
+
+        $companion->save();
+
+        return $this->state($user->fresh(), $companion->fresh());
     }
 
     private function applyDecay(UserCompanion $companion): void
@@ -273,57 +328,4 @@ class CompanionService
 
         return ['key' => 'wilted', 'name' => 'Álmos', 'score' => $score];
     }
-    private function stageForGrowth(int $points, int $knowledgeGrowth, int $careGrowth): array
-{
-    $pointsPerLevel = 12;
-
-    $level = min(100, max(1, (int) floor($points / $pointsPerLevel) + 1));
-    $era = min(10, (int) ceil($level / 10));
-
-    $eraNames = [
-        1 => 'Kódmancs kölyök',
-        2 => 'Kíváncsi tanonc',
-        3 => 'Digitális felfedező',
-        4 => 'Techno cica',
-        5 => 'Okos segítőtárs',
-        6 => 'Haladó buddy',
-        7 => 'Elit kódcica',
-        8 => 'Mester segítőtárs',
-        9 => 'Legendás techno macska',
-        10 => 'Ultimate Getingo Buddy',
-    ];
-
-    $levelMinPoints = ($level - 1) * $pointsPerLevel;
-    $nextLevelPoints = $level < 100 ? $level * $pointsPerLevel : null;
-
-    if ($nextLevelPoints === null) {
-        $levelProgress = 100;
-        $pointsToNextLevel = 0;
-    } else {
-        $levelProgress = (int) floor((($points - $levelMinPoints) / $pointsPerLevel) * 100);
-        $levelProgress = max(0, min(100, $levelProgress));
-        $pointsToNextLevel = max(0, $nextLevelPoints - $points);
-    }
-
-    $eraStartLevel = (($era - 1) * 10) + 1;
-    $eraEndLevel = min($era * 10, 100);
-    $eraLevelSpan = max(1, $eraEndLevel - $eraStartLevel + 1);
-    $eraProgress = (int) floor((($level - $eraStartLevel + 1) / $eraLevelSpan) * 100);
-    $eraProgress = max(0, min(100, $eraProgress));
-
-    return [
-        'key' => 'level-' . $level,
-        'level' => $level,
-        'name' => $eraNames[$era],
-        'era' => $era,
-        'era_name' => $eraNames[$era],
-        'progress_percentage' => $levelProgress,
-        'era_progress_percentage' => $eraProgress,
-        'next_stage_points' => $nextLevelPoints,
-        'points_to_next_stage' => $pointsToNextLevel,
-        'knowledge_growth_points' => $knowledgeGrowth,
-        'care_growth_points' => $careGrowth,
-        'total_growth_points' => $points,
-    ];
-}
 }

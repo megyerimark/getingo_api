@@ -26,7 +26,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'stripe_customer_id',
         'stripe_subscription_id',
         'subscription_status',
+        'subscription_billing_cycle',
         'subscription_current_period_end',
+        'premium_started_at',
     ];
 
     protected $hidden = [
@@ -52,6 +54,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_learning_activity_on' => 'date',
             'privacy_accepted_at' => 'datetime',
             'subscription_current_period_end' => 'datetime',
+            'premium_started_at' => 'datetime',
         ];
     }
 
@@ -84,6 +87,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function companion(): HasOne
     {
         return $this->hasOne(UserCompanion::class);
+    }
+
+    public function subscriptionPayments(): HasMany
+    {
+        return $this->hasMany(SubscriptionPayment::class);
     }
 
     public function projectSubmissions(): HasMany

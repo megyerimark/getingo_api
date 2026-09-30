@@ -31,9 +31,11 @@ class GdprController extends Controller
                 'privacy_policy_version' => $user->privacy_policy_version,
                 'plan' => $user->plan,
                 'subscription_status' => $user->subscription_status,
+                'subscription_billing_cycle' => $user->subscription_billing_cycle,
                 'subscription_current_period_end' => $user->subscription_current_period_end,
                 'stripe_customer_id' => $user->stripe_customer_id,
                 'stripe_subscription_id' => $user->stripe_subscription_id,
+                'premium_started_at' => $user->premium_started_at,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
             ],
@@ -68,6 +70,9 @@ class GdprController extends Controller
                     'updated_at'
                 )
                 ->get(),
+            'subscription_payments' => $user->subscriptionPayments()
+                ->select('id', 'user_id', 'stripe_invoice_id', 'stripe_customer_id', 'stripe_subscription_id', 'status', 'amount_paid', 'amount_due', 'currency', 'billing_reason', 'paid_at', 'period_start', 'period_end', 'created_at', 'updated_at')
+                ->get(),
             'companion' => $user->companion()
                 ->select(
                     'id',
@@ -79,6 +84,7 @@ class GdprController extends Controller
                     'hunger',
                     'happiness',
                     'selected_skin',
+                    'selected_room',
                     'last_interaction_at',
                     'last_decay_at',
                     'created_at',
@@ -135,6 +141,7 @@ class GdprController extends Controller
 
         DB::transaction(function () use ($user): void {
             $user->tokens()->delete();
+            $user->subscriptionPayments()->delete();
 
             if (Schema::hasTable('sessions')) {
                 DB::table('sessions')->where('user_id', $user->id)->delete();

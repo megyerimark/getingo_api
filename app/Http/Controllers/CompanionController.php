@@ -31,4 +31,21 @@ class CompanionController extends Controller
             )
         );
     }
+
+    public function preferences(Request $request)
+    {
+        $validated = $request->validate([
+            'room' => ['nullable', 'string', 'in:studio,play,night'],
+            'skin' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        return response()->json(
+            $this->companionService->updatePreferences(
+                $request->user(),
+                $validated['room'] ?? null,
+                $validated['skin'] ?? null,
+            )
+        );
+    }
+
 }

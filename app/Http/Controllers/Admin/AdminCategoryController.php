@@ -16,7 +16,7 @@ class AdminCategoryController extends Controller
 
         return response()->json(
             Category::query()
-                ->withCount(['lessons', 'exercises'])
+                ->withCount(['lessons', 'lessonSections', 'exercises'])
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->paginate($perPage)

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SubscriptionPayment;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\Webhook;
 use UnexpectedValueException;
 
 class StripeWebhookController extends Controller
@@ -48,9 +49,11 @@ class StripeWebhookController extends Controller
                     }
 
                     if ($user) {
-                        $user->stripe_customer_id = $session->customer ?? $user->stripe_customer_id;
-                        $user->stripe_subscription_id = (string) $session->subscription;
-                        $user->save();
+                        $user->forceFill([
+                            'stripe_customer_id' => $session->customer ?? $user->stripe_customer_id,
+                            'stripe_subscription_id' => (string) $session->subscription,
+                            'subscription_billing_cycle' => $session->metadata?->getingo_billing_cycle ?? $user->subscription_billing_cycle,
+                        ])->save();
                     }
                 }
                 break;
@@ -59,6 +62,14 @@ class StripeWebhookController extends Controller
             case 'customer.subscription.updated':
             case 'customer.subscription.deleted':
                 $this->syncSubscription($event->data->object);
+                break;
+
+            case 'invoice.paid':
+                $this->syncInvoice($event->data->object, 'paid');
+                break;
+
+            case 'invoice.payment_failed':
+                $this->syncInvoice($event->data->object, 'failed');
                 break;
         }
 
@@ -73,6 +84,11 @@ class StripeWebhookController extends Controller
             ->first();
 
         if (! $user) {
+            $userId = $subscription->metadata?->getingo_user_id ?? null;
+            $user = $userId ? User::find($userId) : null;
+        }
+
+        if (! $user) {
             return;
         }
 
@@ -81,16 +97,59 @@ class StripeWebhookController extends Controller
             && $this->containsPremiumPrice($subscription);
 
         $periodEnd = $subscription->items->data[0]->current_period_end ?? null;
+        $billingCycle = $this->billingCycleForSubscription($subscription)
+            ?? ($subscription->metadata?->getingo_billing_cycle ?? null)
+            ?? $user->subscription_billing_cycle;
 
         $user->forceFill([
             'stripe_customer_id' => (string) $subscription->customer,
             'stripe_subscription_id' => $subscription->id,
             'subscription_status' => $status,
+            'subscription_billing_cycle' => $premium ? $billingCycle : $user->subscription_billing_cycle,
             'subscription_current_period_end' => $periodEnd
                 ? Carbon::createFromTimestampUTC((int) $periodEnd)
                 : null,
+            'premium_started_at' => $premium
+                ? ($user->premium_started_at ?? now())
+                : $user->premium_started_at,
             'plan' => $premium ? 'premium' : 'free',
         ])->save();
+    }
+
+    private function syncInvoice($invoice, string $status): void
+    {
+        $customerId = is_string($invoice->customer ?? null)
+            ? $invoice->customer
+            : ($invoice->customer->id ?? null);
+        $user = $customerId ? User::where('stripe_customer_id', $customerId)->first() : null;
+        $subscriptionId = $this->subscriptionIdFromInvoice($invoice);
+        if (! $user && $subscriptionId) {
+            $user = User::where('stripe_subscription_id', $subscriptionId)->first();
+        }
+
+        SubscriptionPayment::updateOrCreate(
+            ['stripe_invoice_id' => (string) $invoice->id],
+            [
+                'user_id' => $user?->id,
+                'stripe_customer_id' => $customerId,
+                'stripe_subscription_id' => $subscriptionId,
+                'status' => $status,
+                'amount_paid' => max(0, (int) ($invoice->amount_paid ?? 0)),
+                'amount_due' => max(0, (int) ($invoice->amount_due ?? 0)),
+                'currency' => strtoupper((string) ($invoice->currency ?? 'HUF')),
+                'billing_reason' => $invoice->billing_reason ?? null,
+                'hosted_invoice_url' => $invoice->hosted_invoice_url ?? null,
+                'paid_at' => $status === 'paid'
+                    ? Carbon::createFromTimestampUTC((int) ($invoice->status_transitions?->paid_at ?? $invoice->created ?? now()->timestamp))
+                    : null,
+                'period_start' => ! empty($invoice->period_start)
+                    ? Carbon::createFromTimestampUTC((int) $invoice->period_start)
+                    : null,
+                'period_end' => ! empty($invoice->period_end)
+                    ? Carbon::createFromTimestampUTC((int) $invoice->period_end)
+                    : null,
+            ]
+        );
     }
 
     private function containsPremiumPrice($subscription): bool
@@ -107,5 +166,31 @@ class StripeWebhookController extends Controller
         }
 
         return false;
+    }
+
+    private function billingCycleForSubscription($subscription): ?string
+    {
+        foreach ($subscription->items->data as $item) {
+            $priceId = $item->price->id ?? null;
+            if ($priceId === config('services.stripe.premium_monthly_price_id')) {
+                return 'monthly';
+            }
+            if ($priceId === config('services.stripe.premium_yearly_price_id')) {
+                return 'yearly';
+            }
+        }
+
+        return null;
+    }
+
+    private function subscriptionIdFromInvoice($invoice): ?string
+    {
+        $legacy = $invoice->subscription ?? null;
+        if (is_string($legacy) && $legacy !== '') {
+            return $legacy;
+        }
+
+        $modern = $invoice->parent?->subscription_details?->subscription ?? null;
+        return is_string($modern) && $modern !== '' ? $modern : null;
     }
 }

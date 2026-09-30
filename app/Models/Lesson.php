@@ -3,27 +3,51 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lesson extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'category_id',
+        'lesson_section_id',
         'title',
         'slug',
+        'sort_order',
         'content',
         'example_code',
         'example_html',
         'example_css',
-        'example_javascript'
+        'example_javascript',
     ];
 
-    public function category()
+    protected function casts(): array
+    {
+        return [
+            'sort_order' => 'integer',
+        ];
+    }
+
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function quizzes()
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(LessonSection::class, 'lesson_section_id');
+    }
+
+    public function quizzes(): HasMany
     {
         return $this->hasMany(Quiz::class);
+    }
+
+    public function progress(): HasMany
+    {
+        return $this->hasMany(LessonProgress::class);
     }
 }
