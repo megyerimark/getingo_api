@@ -1,0 +1,102 @@
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">G</div>
+
+      <div>
+        <strong>Getingo</strong>
+        <span>Admin Panel</span>
+      </div>
+    </div>
+
+    <nav>
+      <span class="nav-title">Áttekintés</span>
+
+      <a
+        routerLink="/admin"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }">
+        <i class="bi bi-grid"></i>
+        Dashboard
+      </a>
+
+      <span class="nav-title">Tartalom</span>
+
+      <a routerLink="/admin/categories" routerLinkActive="active">
+        <i class="bi bi-folder"></i>
+        Kategóriák
+      </a>
+
+      <a routerLink="/admin/lessons" routerLinkActive="active">
+        <i class="bi bi-book"></i>
+        Tananyagok
+      </a>
+
+      <a routerLink="/admin/quizzes" routerLinkActive="active">
+        <i class="bi bi-question-circle"></i>
+        Kvízek
+      </a>
+
+      <a routerLink="/admin/exercises" routerLinkActive="active">
+        <i class="bi bi-check2-square"></i>
+        Feladatok
+      </a>
+
+      <a routerLink="/admin/projects" routerLinkActive="active">
+        <i class="bi bi-code-square"></i>
+        Projektek
+      </a>
+
+      <span class="nav-title">Üzlet</span>
+
+      <a routerLink="/admin/subscriptions" routerLinkActive="active">
+        <i class="bi bi-credit-card"></i>
+        Előfizetések
+      </a>
+
+      <a routerLink="/admin/revenue" routerLinkActive="active">
+        <i class="bi bi-graph-up-arrow"></i>
+        Bevételek
+      </a>
+
+      <span class="nav-title">Rendszer</span>
+
+      <a routerLink="/admin/users" routerLinkActive="active">
+        <i class="bi bi-people"></i>
+        Felhasználók
+      </a>
+
+      <a routerLink="/admin/audit-logs" routerLinkActive="active">
+        <i class="bi bi-shield-check"></i>
+        Audit napló
+      </a>
+    </nav>
+
+    <a class="back-link" routerLink="/">
+      <i class="bi bi-arrow-left"></i>
+      Vissza az oldalra
+    </a>
+  </aside>
+
+  <div class="admin-content">
+    <header class="topbar">
+      <div>
+        <span class="online-dot"></span>
+        Getingo admin rendszer
+      </div>
+
+      <div class="admin-profile">
+        <div class="avatar">A</div>
+
+        <div>
+          <strong>Admin</strong>
+          <span>Administrator</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

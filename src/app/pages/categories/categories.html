@@ -1,0 +1,53 @@
+<section class="page-hero">
+  <div class="page-shell">
+    <span class="eyebrow"><i class="bi bi-journal-code"></i> Getingo tananyagok</span>
+    <h1>Mit szeretnél megtanulni?</h1>
+    <p>Válassz egy témakört, haladj végig a leckéken, próbáld ki a példákat, és gyűjts XP-t.</p>
+  </div>
+</section>
+
+<section class="categories-section">
+  <div class="page-shell">
+    @if (loading) {
+      <div class="loading-state"><div class="spinner-border"></div></div>
+    }
+
+    @if (errorMessage) {
+      <div class="alert alert-danger">{{ errorMessage }}</div>
+    }
+
+    @if (!loading && categories.length) {
+      <div class="categories-grid">
+        @for (category of categories; track category.id) {
+          <a class="category-card" [routerLink]="['/categories', category.id, 'lessons']">
+            <div class="category-top">
+              <span class="category-logo" [class]="'category-logo category-logo--' + categoryTone(category)">
+                {{ categoryShort(category) }}
+              </span>
+              <span class="category-arrow"><i class="bi bi-arrow-up-right"></i></span>
+            </div>
+
+            <div>
+              <h2>{{ category.name }}</h2>
+              <p>Leckék, példák, kódpróba és kvízek egy tanulási folyamatban.</p>
+            </div>
+
+            <div class="category-footer">
+              @if (category.lessons_count !== undefined) {
+                <span>
+                  <i class="bi bi-diagram-3"></i>
+                  {{ category.lesson_sections_count ?? 0 }} fejezet • {{ category.lessons_count }} lecke
+                </span>
+              } @else {
+                <span><i class="bi bi-book"></i> Strukturált tananyag</span>
+              }
+              <strong>Kezdés</strong>
+            </div>
+          </a>
+        }
+      </div>
+    } @else if (!loading && !errorMessage) {
+      <div class="empty-state">Még nincs elérhető tananyag.</div>
+    }
+  </div>
+</section>

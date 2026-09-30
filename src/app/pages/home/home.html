@@ -1,0 +1,222 @@
+<section class="hero-section">
+  <div class="hero-glow hero-glow-one"></div>
+  <div class="hero-glow hero-glow-two"></div>
+
+  <div class="home-shell hero-grid">
+    <div class="hero-copy">
+      <span class="hero-badge">
+        <i class="bi bi-mortarboard-fill"></i>
+        Programozás mindenkinek
+      </span>
+
+      <h1>
+        Tanulj programozást
+        <span>egyszerűen</span>
+      </h1>
+
+      <p class="hero-lead">
+        Gyakorlati példák, érthető magyarázatok és interaktív feladatok segítenek,
+        hogy lépésről lépésre fejleszd a tudásodat.
+      </p>
+
+      <div class="hero-search">
+        <i class="bi bi-search"></i>
+        <input
+          type="search"
+          [formControl]="search"
+          placeholder="Keresés a tananyagok között..."
+          aria-label="Keresés a tananyagok között"
+          (keydown.enter)="searchContent()">
+        <button type="button" (click)="searchContent()">Keresés</button>
+      </div>
+
+      @if (categories.length) {
+        <div class="popular-searches">
+          <span>Témák:</span>
+          @for (category of categories.slice(0, 5); track category.id) {
+            <button type="button" (click)="searchCategory(category)">
+              {{ category.name }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="hero-visual" aria-label="Getingo kódszerkesztő előnézet">
+      <div class="editor-window">
+        <div class="editor-topbar">
+          <div class="window-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="editor-tabs">
+            <span class="active">index.html</span>
+            <span>style.css</span>
+            <span>script.js</span>
+          </div>
+        </div>
+
+        <pre class="hero-code"><code><span class="code-blue">&lt;!DOCTYPE html&gt;</span>
+<span class="code-purple">&lt;html</span> <span class="code-sky">lang</span>=<span class="code-green">"hu"</span><span class="code-purple">&gt;</span>
+  <span class="code-purple">&lt;head&gt;</span>
+    <span class="code-purple">&lt;title&gt;</span>Getingo<span class="code-purple">&lt;/title&gt;</span>
+  <span class="code-purple">&lt;/head&gt;</span>
+  <span class="code-purple">&lt;body&gt;</span>
+    <span class="code-purple">&lt;h1&gt;</span>Tanulj programozást<span class="code-purple">&lt;/h1&gt;</span>
+    <span class="code-purple">&lt;p&gt;</span>Lépésről lépésre.<span class="code-purple">&lt;/p&gt;</span>
+  <span class="code-purple">&lt;/body&gt;</span>
+<span class="code-purple">&lt;/html&gt;</span></code></pre>
+
+        <a class="run-orb" routerLink="/categories" aria-label="Tananyagok megnyitása">
+          <i class="bi bi-play-fill"></i>
+        </a>
+      </div>
+
+      <div class="floating-feature feature-one">
+        <i class="bi bi-lightning-charge-fill"></i>
+        <span>Írj kódot a böngészőben</span>
+      </div>
+      <div class="floating-feature feature-two">
+        <i class="bi bi-code-slash"></i>
+        <span>Gyakorlati példák</span>
+      </div>
+      <div class="floating-feature feature-three">
+        <i class="bi bi-book-fill"></i>
+        <span>Lépésről lépésre</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content-section">
+  <div class="home-shell">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker">Fedezd fel</span>
+        <h2>Tananyagok</h2>
+        <p>Kezdd az alapokkal, vagy merülj el egy konkrét technológiában.</p>
+      </div>
+      <a routerLink="/categories">Összes tananyag <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    @if (loading) {
+      <div class="section-loading"><div class="spinner-border"></div></div>
+    } @else if (categories.length) {
+      <div class="category-grid">
+        @for (category of categories.slice(0, 5); track category.id) {
+          <a class="category-card" [routerLink]="['/categories', category.id, 'lessons']">
+            <span class="category-logo" [class]="'category-logo category-logo--' + categoryTone(category)">
+              {{ categoryShort(category) }}
+            </span>
+            <span class="category-copy">
+              <strong>{{ category.name }}</strong>
+              <small>
+                @if (category.lessons_count !== undefined) {
+                  {{ category.lessons_count }} lecke
+                } @else {
+                  Leckék és példák
+                }
+              </small>
+            </span>
+            <span class="card-arrow"><i class="bi bi-arrow-right"></i></span>
+          </a>
+        }
+      </div>
+    } @else {
+      <div class="empty-card">A tananyagok hamarosan megjelennek.</div>
+    }
+  </div>
+</section>
+
+<section class="content-section lesson-playground-section">
+  <div class="home-shell split-content">
+    <div class="latest-column">
+      <div class="section-head compact">
+        <div>
+          <span class="section-kicker">Folytasd a tanulást</span>
+          <h2>Legújabb leckék</h2>
+          <p>Friss leckék a jelenleg elérhető tananyagokból.</p>
+        </div>
+      </div>
+
+      @if (lessonsLoading) {
+        <div class="section-loading small"><div class="spinner-border spinner-border-sm"></div></div>
+      } @else if (latestLessons.length) {
+        <div class="lesson-list">
+          @for (lesson of latestLessons; track lesson.id) {
+            <a
+              class="lesson-card"
+              [routerLink]="['/categories', lesson.categoryId, 'lessons']"
+              [queryParams]="{ lesson: lesson.id }">
+              <span class="lesson-icon"><i class="bi bi-code-slash"></i></span>
+              <span class="lesson-copy">
+                <strong>{{ lesson.title }}</strong>
+                <small>{{ lessonExcerpt(lesson) }}</small>
+              </span>
+              <span class="lesson-meta">{{ lesson.categoryName }}</span>
+            </a>
+          }
+        </div>
+      } @else {
+        <div class="empty-card">Még nincs megjeleníthető lecke.</div>
+      }
+    </div>
+
+    <div class="playground-column">
+      <div class="section-head compact">
+        <div>
+          <span class="section-kicker">Interaktív</span>
+          <h2>Próbáld ki – írj kódot online</h2>
+          <p>Futtasd a példát közvetlenül a böngészőben.</p>
+        </div>
+      </div>
+
+      <div class="playground-card">
+        <div class="demo-code-panel">
+          <div class="demo-code-header">
+            <span>HTML példa</span>
+            <span class="demo-dot"></span>
+          </div>
+          <pre><code>{{ demoHtml }}</code></pre>
+        </div>
+
+        <app-code-runner
+          [html]="demoHtml"
+          [css]="demoCss"
+          [javascript]="demoJavascript">
+        </app-code-runner>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="progress-section">
+  <div class="home-shell progress-grid">
+    <div class="progress-copy">
+      <span class="section-kicker">Nem csak olvasás</span>
+      <h2>Tanulj, gyakorolj, és lásd a fejlődésed.</h2>
+      <p>
+        A Getingo a leckéket, kvízeket, saját jegyzeteket és a Getingo Buddyt egyetlen
+        tanulási folyamatba kapcsolja.
+      </p>
+      <a class="primary-link" routerLink="/register">
+        Saját fiók létrehozása
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="progress-cards">
+      <div class="progress-feature">
+        <span class="progress-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+        <div><strong>10 XP</strong><small>egy újonnan teljesített leckéért</small></div>
+      </div>
+      <div class="progress-feature">
+        <span class="progress-icon"><i class="bi bi-patch-check-fill"></i></span>
+        <div><strong>5 XP</strong><small>az első helyes kvízmegoldásért</small></div>
+      </div>
+      <div class="progress-feature">
+        <span class="progress-icon"><i class="bi bi-flower1"></i></span>
+        <div><strong>Getingo Buddy</strong><small>a tudásoddal együtt fejlődik</small></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,265 @@
+:host {
+  display: block;
+  min-height: 70vh;
+  background: #fff;
+}
+
+.search-page {
+  padding: 62px 0 76px;
+  background:
+    radial-gradient(circle at 85% 4%, rgba(22, 119, 255, .09), transparent 20%),
+    #fff;
+}
+
+.search-shell {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.search-header {
+  max-width: 720px;
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #126ce8;
+  font-size: .8rem;
+  font-weight: 850;
+}
+
+.search-header h1 {
+  margin: 10px 0 10px;
+  color: #0b2146;
+  font-size: clamp(2.25rem, 4vw, 3.7rem);
+  font-weight: 900;
+  line-height: 1.03;
+  letter-spacing: -.05em;
+}
+
+.search-header p {
+  margin: 0;
+  color: #6a7b95;
+  font-size: 1.02rem;
+}
+
+.search-form {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  padding: 6px;
+  border: 1px solid #d7e5f5;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 44px rgba(33, 83, 151, .09);
+}
+
+.search-form > i {
+  color: #7990ae;
+  text-align: center;
+}
+
+.search-form input {
+  min-width: 0;
+  height: 50px;
+  border: 0;
+  outline: 0;
+  color: #17365f;
+}
+
+.search-form button {
+  min-width: 120px;
+  height: 46px;
+  border: 0;
+  border-radius: 11px;
+  background: #1677ff;
+  color: #fff;
+  font-weight: 850;
+}
+
+.loading-state {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+}
+
+.results-summary {
+  margin: 28px 0 18px;
+  color: #72839d;
+  font-size: .85rem;
+  font-weight: 750;
+}
+
+.result-section {
+  margin-top: 34px;
+}
+
+.result-heading {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-heading-icon,
+.result-icon {
+  display: grid;
+  place-items: center;
+  background: #eaf4ff;
+  color: #1677ff;
+}
+
+.result-heading-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.result-heading h2 {
+  margin: 0;
+  color: #102449;
+  font-size: 1.22rem;
+  font-weight: 900;
+}
+
+.result-heading p {
+  margin: 2px 0 0;
+  color: #8493a9;
+  font-size: .8rem;
+}
+
+.result-list {
+  display: grid;
+  gap: 10px;
+}
+
+.result-card {
+  text-decoration: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 15px;
+  padding: 16px;
+  border: 1px solid #e0eaf6;
+  border-radius: 15px;
+  background: #fff;
+  text-align: left;
+  transition: .2s ease;
+}
+
+button.result-card:hover {
+  border-color: #a8ccfb;
+  box-shadow: 0 13px 32px rgba(31, 80, 144, .08);
+  transform: translateY(-2px);
+}
+
+.result-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  font-size: 1.15rem;
+}
+
+.result-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-type {
+  margin-bottom: 3px;
+  color: #1677ff;
+  font-size: .68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.result-copy strong {
+  color: #102449;
+  font-size: 1rem;
+}
+
+.result-copy small {
+  margin-top: 4px;
+  display: -webkit-box;
+  overflow: hidden;
+  color: #74849c;
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.open-result {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf6ff;
+  color: #1677ff;
+}
+
+.static {
+  cursor: default;
+}
+
+.no-results {
+  margin-top: 44px;
+  padding: 48px 24px;
+  border: 1px dashed #d7e5f5;
+  border-radius: 18px;
+  background: #f9fbff;
+  text-align: center;
+}
+
+.no-results > span {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: #eaf4ff;
+  color: #1677ff;
+  font-size: 1.3rem;
+}
+
+.no-results h3 {
+  margin: 0 0 6px;
+  color: #102449;
+}
+
+.no-results p {
+  margin: 0;
+  color: #7a8ba3;
+}
+
+@media (max-width: 620px) {
+  .search-page {
+    padding-top: 44px;
+  }
+
+  .search-form {
+    grid-template-columns: 42px 1fr;
+  }
+
+  .search-form button {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  .result-card {
+  text-decoration: none;
+    grid-template-columns: auto 1fr;
+  }
+
+  .open-result {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

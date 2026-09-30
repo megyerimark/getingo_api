@@ -1,0 +1,10 @@
+:host { display: block; }
+.success-page { min-height: calc(100vh - 72px); display: grid; place-items: center; padding: 40px 20px; background: radial-gradient(circle at 50% 20%, rgba(139,92,246,.17), transparent 30%), #f7f9ff; }
+.success-card { width: min(620px, 100%); padding: 52px; text-align: center; border: 1px solid #dddff5; border-radius: 28px; background: rgba(255,255,255,.94); box-shadow: 0 30px 80px rgba(56,42,114,.15); }
+.success-icon { width: 82px; height: 82px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 26px; background: linear-gradient(145deg, #8b5cf6, #2563eb); color: #fff; font-size: 2rem; box-shadow: 0 18px 42px rgba(99,72,210,.28); }
+.success-icon.pending { background: #eef3fb; color: #425575; box-shadow: none; }
+.success-icon.loading { background: #f5f0ff; box-shadow: none; }
+.kicker { color: #7550d9; font-size: .75rem; font-weight: 900; letter-spacing: .12em; }
+h1 { margin: 12px 0; color: #102449; font-size: clamp(2.2rem, 6vw, 3.8rem); font-weight: 950; letter-spacing: -.05em; }
+p { margin: 0 auto 28px; max-width: 500px; color: #6c7c94; line-height: 1.7; }
+.success-button { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 20px; border-radius: 13px; background: linear-gradient(90deg, #8b5cf6, #2563eb); color: #fff; text-decoration: none; font-weight: 900; }

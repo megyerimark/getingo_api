@@ -1,0 +1,57 @@
+.runner {
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, .06);
+  background: #fff;
+}
+
+.runner-toolbar {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 13px;
+  background: #0b203d;
+  color: #fff;
+}
+
+.runner-title {
+  color: #b8c9e1;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.runner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.runner-actions .btn-success {
+  border-color: #1677ff;
+  background: #1677ff;
+}
+
+.runner-actions .btn-outline-secondary {
+  border-color: rgba(255, 255, 255, .18);
+  color: #b9c9df;
+}
+
+.runner-actions .btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+}
+
+.preview-frame {
+  display: block;
+  width: 100%;
+  min-height: 260px;
+  border: 0;
+  background: #fff;
+}
+
+@media (max-width: 600px) {
+  .runner-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

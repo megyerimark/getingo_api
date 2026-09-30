@@ -1,0 +1,14 @@
+DEVELOPMENT FALLBACK MODEL
+==========================
+
+Bicolor Cat by kenchoo
+License: Creative Commons Attribution 4.0 (CC BY 4.0)
+Source/project reference:
+https://github.com/code4fukui/vr-cats
+https://sketchfab.com/kenchoo
+
+The fallback model is loaded from the public vr-cats repository only when
+/public/models/getingo-buddy/getingo-buddy.glb is not present.
+
+For production, replace the fallback with the custom Getingo Buddy GLB and update/remove
+this attribution only if the fallback is no longer used anywhere.

@@ -1,0 +1,353 @@
+@if (loading) {
+  <div class="text-center py-5">
+    <div class="spinner-border"></div>
+  </div>
+} @else {
+  <div class="lesson-layout">
+    <aside class="lesson-sidebar">
+      @if (curriculum) {
+        <div class="course-summary">
+          <a class="course-back" routerLink="/categories">
+            <i class="bi bi-arrow-left"></i> Tananyagok
+          </a>
+
+          <div class="course-kicker">Fő kategória</div>
+          <h2>{{ curriculum.category.name }}</h2>
+
+          <div class="course-progress-row">
+            <span>{{ curriculum.progress.completed }} / {{ curriculum.progress.total }} lecke</span>
+            <strong>{{ curriculum.progress.percentage }}%</strong>
+          </div>
+          <div class="course-progress-track">
+            <div class="course-progress-value" [style.width.%]="curriculum.progress.percentage"></div>
+          </div>
+        </div>
+      }
+
+      <div class="curriculum-nav">
+        @for (section of sections; track section.id) {
+          <div class="curriculum-section" [class.open]="isSectionOpen(section.id)">
+            <button class="section-toggle" type="button" (click)="toggleSection(section.id)">
+              <span class="section-chevron">
+                <i class="bi" [class.bi-chevron-down]="isSectionOpen(section.id)" [class.bi-chevron-right]="!isSectionOpen(section.id)"></i>
+              </span>
+              <span class="section-copy">
+                <strong>{{ section.name }}</strong>
+                <small>{{ sectionCompleted(section) }} / {{ section.lessons.length }} kész</small>
+              </span>
+              @if (section.progress.total > 0 && sectionCompleted(section) === section.progress.total) {
+                <i class="bi bi-check-circle-fill section-done"></i>
+              }
+            </button>
+
+            @if (isSectionOpen(section.id)) {
+              <div class="section-lessons">
+                @for (lesson of section.lessons; track lesson.id) {
+                  <button
+                    class="lesson-link"
+                    type="button"
+                    [class.active]="activeLesson?.id === lesson.id"
+                    [class.completed]="isLessonCompleted(lesson)"
+                    (click)="selectLesson(lesson)">
+                    <span class="lesson-status">
+                      @if (isLessonCompleted(lesson)) {
+                        <i class="bi bi-check-circle-fill"></i>
+                      } @else {
+                        <i class="bi bi-circle"></i>
+                      }
+                    </span>
+                    <span>{{ lesson.title }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </aside>
+
+    <main class="lesson-main">
+      @if (message) {
+        <div class="alert alert-success">
+          {{ message }}
+        </div>
+      }
+
+      @if (errorMessage) {
+        <div class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+      }
+
+      @if (activeLesson) {
+        <article class="lesson-article">
+          @if (curriculum) {
+            <div class="lesson-breadcrumb">
+              <span>{{ curriculum.category.name }}</span>
+              <i class="bi bi-chevron-right"></i>
+              <span>{{ getActiveSectionName() }}</span>
+            </div>
+          }
+          <h1>{{ activeLesson.title }}</h1>
+
+          <div class="lesson-text">
+            {{ activeLesson.content }}
+          </div>
+
+        @if (
+  activeLesson.example_html ||
+  activeLesson.example_css ||
+  activeLesson.example_javascript ||
+  activeLesson.example_code
+) {
+            <section class="original-code-section">
+              <div class="section-heading">
+                <div>
+                  <h3>Eredeti példa</h3>
+                  <span>Az admin által létrehozott mintakód.</span>
+                </div>
+
+                <span class="badge text-bg-secondary">
+                  Csak olvasható
+                </span>
+              </div>
+
+              @if (activeLesson.example_html) {
+                <div class="code-block">
+                  <div class="code-block-header">
+                    HTML
+                  </div>
+
+                  <pre class="original-code"><code>{{ activeLesson.example_html }}</code></pre>
+                </div>
+              }
+
+              @if (activeLesson.example_css) {
+                <div class="code-block mt-3">
+                  <div class="code-block-header">
+                    CSS
+                  </div>
+
+                  <pre class="original-code"><code>{{ activeLesson.example_css }}</code></pre>
+                </div>
+              }
+
+@if (activeLesson.example_javascript || activeLesson.example_code) {
+  <div class="code-block mt-3">
+    <div class="code-block-header">
+      JavaScript
+    </div>
+
+    <pre class="original-code"><code>{{ activeLesson.example_javascript ?? activeLesson.example_code }}</code></pre>
+  </div>
+}        </section>
+
+            <section class="workspace-section">
+              <div class="section-heading">
+                <div>
+                  <h3>Próbáld ki</h3>
+                  <span>
+                    Módosítsd a példakódot, majd futtasd.
+                  </span>
+                </div>
+
+                @if (personalCodeSaved) {
+                  <span class="badge text-bg-success">
+                    Mentve
+                  </span>
+                }
+              </div>
+
+              @if (codeLoading) {
+                <div class="text-center py-4">
+                  <div class="spinner-border spinner-border-sm"></div>
+                </div>
+              } @else {
+                <div class="w3-editor">
+                  <div class="editor-tabs">
+                    <button
+                      class="editor-tab"
+                      type="button"
+                      [class.active]="activeCodeTab === 'html'"
+                      (click)="setCodeTab('html')">
+                      HTML
+                    </button>
+
+                    <button
+                      class="editor-tab"
+                      type="button"
+                      [class.active]="activeCodeTab === 'css'"
+                      (click)="setCodeTab('css')">
+                      CSS
+                    </button>
+
+                    <button
+                      class="editor-tab"
+                      type="button"
+                      [class.active]="activeCodeTab === 'javascript'"
+                      (click)="setCodeTab('javascript')">
+                      JavaScript
+                    </button>
+                  </div>
+
+                  <div class="editor-body">
+                    @if (activeCodeTab === 'html') {
+                      <textarea
+                        class="code-editor"
+                        spellcheck="false"
+                        [formControl]="htmlCode"
+                        placeholder="Írd ide a HTML kódot...">
+                      </textarea>
+                    }
+
+                    @if (activeCodeTab === 'css') {
+                      <textarea
+                        class="code-editor"
+                        spellcheck="false"
+                        [formControl]="cssCode"
+                        placeholder="Írd ide a CSS kódot...">
+                      </textarea>
+                    }
+
+                    @if (activeCodeTab === 'javascript') {
+                      <textarea
+                        class="code-editor"
+                        spellcheck="false"
+                        [formControl]="javascriptCode"
+                        placeholder="Írd ide a JavaScript kódot...">
+                      </textarea>
+                    }
+                  </div>
+
+                  <div class="editor-footer">
+                    @if (auth.isLoggedIn()) {
+                      <button
+                        class="btn btn-primary"
+                        type="button"
+                        (click)="savePersonalCode()">
+                        Saját kód mentése
+                      </button>
+                    } @else {
+                      <a
+                        class="btn btn-primary"
+                        routerLink="/login">
+                        Belépés a mentéshez
+                      </a>
+                    }
+
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      (click)="resetPersonalCode()">
+                      Eredeti visszaállítása
+                    </button>
+                  </div>
+                </div>
+
+                <app-code-runner
+                  [html]="htmlCode.value"
+                  [css]="cssCode.value"
+                  [javascript]="javascriptCode.value">
+                </app-code-runner>
+              }
+            </section>
+          }
+
+          <app-lesson-quiz
+            [lessonId]="activeLesson.id">
+          </app-lesson-quiz>
+
+          @if (auth.isLoggedIn()) {
+            <section class="student-tools">
+              <div class="d-flex flex-wrap gap-2 mb-4">
+                <button
+                  class="btn btn-success"
+                  type="button"
+                  (click)="completeLesson()">
+                  ✓ Teljesítettem
+                </button>
+
+                <button
+                  class="btn btn-outline-warning"
+                  type="button"
+                  (click)="toggleFavorite()">
+                  ★ Kedvenc
+                </button>
+              </div>
+
+              <div class="note-box">
+                <div class="section-heading">
+                  <div>
+                    <h3>Saját jegyzet</h3>
+                    <span>Ezt csak te látod.</span>
+                  </div>
+
+                  @if (activeNote) {
+                    <span class="badge text-bg-success">
+                      Mentve
+                    </span>
+                  }
+                </div>
+
+                <textarea
+                  class="form-control"
+                  rows="6"
+                  [formControl]="note"
+                  placeholder="Írj saját jegyzetet ehhez a leckéhez...">
+                </textarea>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    (click)="saveNote()">
+                    {{ activeNote ? 'Jegyzet frissítése' : 'Jegyzet mentése' }}
+                  </button>
+
+                  @if (activeNote) {
+                    <button
+                      class="btn btn-outline-danger"
+                      type="button"
+                      (click)="deleteNote()">
+                      Jegyzet törlése
+                    </button>
+                  }
+                </div>
+              </div>
+            </section>
+          } @else {
+            <div class="login-notice">
+              <h4>Szeretnéd elmenteni a munkádat?</h4>
+
+              <p>
+                A tananyag, a HTML/CSS/JavaScript szerkesztő,
+                a kódfuttató és a kvíz bejelentkezés nélkül is használható.
+              </p>
+
+              <p>
+                Saját kód mentéséhez, jegyzeteléshez,
+                kedvencekhez és XP gyűjtéshez jelentkezz be.
+              </p>
+
+              <a
+                class="btn btn-success me-2"
+                routerLink="/login">
+                Belépés
+              </a>
+
+              <a
+                class="btn btn-outline-success"
+                routerLink="/register">
+                Regisztráció
+              </a>
+            </div>
+          }
+        </article>
+      } @else {
+        <div class="alert alert-info">
+          Ebben a kategóriában még nincs tananyag.
+        </div>
+      }
+    </main>
+  </div>
+}

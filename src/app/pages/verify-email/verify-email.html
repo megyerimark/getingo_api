@@ -1,0 +1,38 @@
+<section class="verify-page">
+  <div class="verify-card">
+    <div class="mail-icon"><i class="bi bi-envelope-check"></i></div>
+    <span class="eyebrow">Még egy lépés</span>
+    <h1>Erősítsd meg az email címed</h1>
+    <p>
+      Küldtünk egy megerősítő linket
+      <strong>{{ user?.email }}</strong>
+      címre. Kattints a levélben található gombra, hogy elérd a dashboardot, az XP-t és a Getingo Buddyt.
+    </p>
+
+    @if (message) {
+      <div class="status success"><i class="bi bi-check-circle"></i>{{ message }}</div>
+    }
+
+    @if (errorMessage) {
+      <div class="status error"><i class="bi bi-exclamation-circle"></i>{{ errorMessage }}</div>
+    }
+
+    <div class="verify-actions">
+      <button type="button" class="primary" (click)="refreshStatus()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Már megerősítettem
+      </button>
+      <button type="button" class="secondary" [disabled]="isLoading" (click)="resend()">
+        <i class="bi bi-send"></i>
+        {{ isLoading ? 'Küldés...' : 'Email újraküldése' }}
+      </button>
+    </div>
+
+    <div class="verify-help">
+      <strong>Nem találod?</strong>
+      <span>Nézd meg a Spam / Levélszemét mappát is.</span>
+    </div>
+
+    <a routerLink="/" class="back-link"><i class="bi bi-arrow-left"></i> Vissza a főoldalra</a>
+  </div>
+</section>

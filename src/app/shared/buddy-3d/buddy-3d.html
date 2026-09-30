@@ -1,0 +1,29 @@
+<div class="buddy-3d-shell" [class.compact]="compact" [class.premium]="premium">
+  <canvas
+    #canvas
+    aria-label="Interaktív, riggelt 3D Getingo Buddy"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp()"
+    (pointercancel)="onPointerUp()"
+    (wheel)="onWheel($event)">
+  </canvas>
+
+  @if (modelStatus === 'loading') {
+    <div class="model-loading"><span class="spinner-border spinner-border-sm"></span>{{ modelStatusText }}</div>
+  }
+
+  @if (modelStatus === 'error') {
+    <div class="model-error"><i class="bi bi-exclamation-triangle"></i>{{ modelStatusText }}</div>
+  }
+
+  @if (modelStatus === 'demo') {
+    <div class="model-source">Demo 3D alapmodell · kenchoo · CC BY 4.0</div>
+  }
+
+  <button class="reset-view" type="button" (click)="resetView()" title="Kamera alaphelyzet">
+    <i class="bi bi-arrow-counterclockwise"></i>
+  </button>
+
+  <div class="hint"><i class="bi bi-arrows-move"></i> Húzd a forgatáshoz · kattints a simogatáshoz · görgővel zoom</div>
+</div>

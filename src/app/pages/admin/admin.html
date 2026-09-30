@@ -1,0 +1,164 @@
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">G</div>
+
+      <div class="brand-text">
+        <strong>Getingo</strong>
+        <span>Admin Panel</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-title">Áttekintés</span>
+
+        <a
+          routerLink="/admin/dashboard"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }">
+          <i class="bi bi-grid-1x2"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-title">Tartalomkezelés</span>
+
+        <a
+          routerLink="/admin/categories"
+          routerLinkActive="active">
+          <i class="bi bi-folder"></i>
+          <span>Kategóriák</span>
+        </a>
+
+        <a
+          routerLink="/admin/lessons"
+          routerLinkActive="active">
+          <i class="bi bi-book"></i>
+          <span>Tananyagok</span>
+        </a>
+
+        <a
+          routerLink="/admin/quizzes"
+          routerLinkActive="active">
+          <i class="bi bi-patch-question"></i>
+          <span>Kvízek</span>
+        </a>
+
+        <a
+          routerLink="/admin/exercises"
+          routerLinkActive="active">
+          <i class="bi bi-check2-square"></i>
+          <span>Feladatok</span>
+        </a>
+
+        <a
+          routerLink="/admin/projects"
+          routerLinkActive="active">
+          <i class="bi bi-code-square"></i>
+          <span>Projektek</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-title">Üzlet</span>
+
+        <a
+          routerLink="/admin/subscriptions"
+          routerLinkActive="active">
+          <i class="bi bi-credit-card"></i>
+          <span>Előfizetések</span>
+        </a>
+
+        <a
+          routerLink="/admin/revenue"
+          routerLinkActive="active">
+          <i class="bi bi-graph-up-arrow"></i>
+          <span>Bevételek</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-title">Rendszer</span>
+
+        <a routerLink="/dashboard">
+          <i class="bi bi-person-circle"></i>
+          <span>Fiókom</span>
+        </a>
+
+        <a
+          routerLink="/admin/users"
+          routerLinkActive="active">
+          <i class="bi bi-people"></i>
+          <span>Felhasználók</span>
+        </a>
+
+        <a
+          routerLink="/admin/audit-logs"
+          routerLinkActive="active">
+          <i class="bi bi-shield-check"></i>
+          <span>Audit napló</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a
+        class="back-link"
+        routerLink="/">
+        <i class="bi bi-arrow-left"></i>
+        <span>Vissza az oldalra</span>
+      </a>
+
+      <button
+        class="logout-button"
+        type="button"
+        (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Kilépés</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <span class="status-dot"></span>
+
+        <div>
+          <strong>Getingo Admin</strong>
+          <span>Adminisztrációs rendszer</span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button
+          class="topbar-icon-button"
+          type="button">
+          <i class="bi bi-bell"></i>
+        </button>
+
+        <a
+          class="admin-profile"
+          routerLink="/dashboard">
+
+          <div class="profile-avatar">
+            A
+          </div>
+
+          <div class="profile-info">
+            <strong>Admin</strong>
+            <span>Fiókom</span>
+          </div>
+
+          <i class="bi bi-chevron-right profile-arrow"></i>
+        </a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

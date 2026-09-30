@@ -1,0 +1,133 @@
+<section class="account-page">
+  <div class="account-shell">
+    <header class="account-header">
+      <div>
+        <span class="eyebrow">Getingo fiók</span>
+        <h1>Fiókbeállítások</h1>
+        <p>Kezeld a profilodat, a biztonsági beállításokat és a személyes adataidat.</p>
+      </div>
+      <a routerLink="/dashboard" class="back-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+    </header>
+
+    <div class="account-grid">
+      <article class="settings-card profile-card">
+        <div class="card-heading">
+          <span class="icon blue"><i class="bi bi-person"></i></span>
+          <div>
+            <h2>Profil</h2>
+            <p>A neved és az email címed.</p>
+          </div>
+        </div>
+
+        @if (auth.currentUser(); as user) {
+          <div class="email-status" [class.verified]="user.email_verified_at">
+            <i class="bi" [class.bi-patch-check-fill]="user.email_verified_at" [class.bi-exclamation-circle]="!user.email_verified_at"></i>
+            {{ user.email_verified_at ? 'Email cím megerősítve' : 'Email megerősítés szükséges' }}
+            @if (!user.email_verified_at) {
+              <a routerLink="/verify-email">Megerősítés</a>
+            }
+          </div>
+        }
+
+        @if (profileMessage) { <div class="feedback success">{{ profileMessage }}</div> }
+        @if (profileError) { <div class="feedback error">{{ profileError }}</div> }
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+          <label>
+            <span>Név</span>
+            <input type="text" formControlName="name" autocomplete="name">
+          </label>
+
+          <label>
+            <span>Email cím</span>
+            <input type="email" formControlName="email" autocomplete="email">
+          </label>
+
+          <label>
+            <span>Jelenlegi jelszó</span>
+            <input type="password" formControlName="current_password" autocomplete="current-password">
+            <small>Csak akkor szükséges, ha az email címedet módosítod.</small>
+          </label>
+
+          <button class="primary-button" type="submit" [disabled]="isSavingProfile">
+            {{ isSavingProfile ? 'Mentés...' : 'Változtatások mentése' }}
+          </button>
+        </form>
+      </article>
+
+      <article class="settings-card">
+        <div class="card-heading">
+          <span class="icon purple"><i class="bi bi-shield-lock"></i></span>
+          <div>
+            <h2>Jelszó</h2>
+            <p>Használj legalább 12 karakteres erős jelszót.</p>
+          </div>
+        </div>
+
+        @if (passwordMessage) { <div class="feedback success">{{ passwordMessage }}</div> }
+        @if (passwordError) { <div class="feedback error">{{ passwordError }}</div> }
+
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <label>
+            <span>Jelenlegi jelszó</span>
+            <input type="password" formControlName="current_password" autocomplete="current-password">
+          </label>
+          <label>
+            <span>Új jelszó</span>
+            <input type="password" formControlName="password" autocomplete="new-password">
+          </label>
+          <label>
+            <span>Új jelszó újra</span>
+            <input type="password" formControlName="password_confirmation" autocomplete="new-password">
+          </label>
+          <button class="secondary-button" type="submit" [disabled]="isChangingPassword">
+            {{ isChangingPassword ? 'Módosítás...' : 'Jelszó módosítása' }}
+          </button>
+        </form>
+      </article>
+
+      <article class="settings-card data-card">
+        <div class="card-heading">
+          <span class="icon cyan"><i class="bi bi-database-down"></i></span>
+          <div>
+            <h2>Személyes adatok</h2>
+            <p>Töltsd le a Getingo által a fiókodhoz tárolt adatokat JSON formátumban.</p>
+          </div>
+        </div>
+        <button class="secondary-button" type="button" [disabled]="isExporting" (click)="exportData()">
+          <i class="bi bi-download"></i>
+          {{ isExporting ? 'Letöltés...' : 'Adataim letöltése' }}
+        </button>
+      </article>
+
+      <article class="settings-card danger-card">
+        <div class="card-heading">
+          <span class="icon red"><i class="bi bi-trash3"></i></span>
+          <div>
+            <h2>Fiók törlése</h2>
+            <p>A fiók és a hozzá kapcsolódó személyes tanulási adatok véglegesen törlődnek.</p>
+          </div>
+        </div>
+
+        @if (deleteError) { <div class="feedback error">{{ deleteError }}</div> }
+
+        <form [formGroup]="deleteForm" (ngSubmit)="deleteAccount()">
+          <label>
+            <span>Jelszavad a megerősítéshez</span>
+            <input type="password" formControlName="password" autocomplete="current-password">
+          </label>
+
+          <label class="check-row">
+            <input type="checkbox" formControlName="confirm">
+            <span>Megértem, hogy a törlés végleges és nem vonható vissza.</span>
+          </label>
+
+          <button class="danger-button" type="submit" [disabled]="isDeleting">
+            <i class="bi bi-trash3"></i>
+            {{ isDeleting ? 'Törlés...' : 'Fiókom végleges törlése' }}
+          </button>
+        </form>
+      </article>
+    </div>
+  </div>
+</section>

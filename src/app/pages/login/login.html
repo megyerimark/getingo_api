@@ -1,0 +1,75 @@
+<section class="auth-page">
+  <div class="auth-shell">
+    <div class="auth-aside">
+      <span class="auth-badge"><i class="bi bi-lightning-charge-fill"></i> Folytasd a fejlődést</span>
+      <h1>Üdv újra a Getingón.</h1>
+      <p>Lépj be, folytasd a leckéidet, gyűjts XP-t, és gondozd tovább a Getingo Buddyt.</p>
+
+      <div class="auth-points">
+        <div><i class="bi bi-check-circle-fill"></i><span>Saját jegyzetek és mentett kód</span></div>
+        <div><i class="bi bi-check-circle-fill"></i><span>XP és tanulási haladás</span></div>
+        <div><i class="bi bi-check-circle-fill"></i><span>Getingo Buddy fejlődés</span></div>
+      </div>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-brand"><span>G</span><strong>Getingo</strong></div>
+      <h2>Bejelentkezés</h2>
+      <p class="auth-subtitle">Add meg a fiókod adatait.</p>
+
+      @if (errorMessage) {
+        <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="field-group">
+          <label for="email">Email cím</label>
+          <input
+            id="email"
+            type="email"
+            class="form-control"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="pelda@email.hu"
+            [class.is-invalid]="loginForm.controls.email.touched && loginForm.controls.email.invalid">
+          @if (loginForm.controls.email.touched && loginForm.controls.email.hasError('required')) {
+            <div class="invalid-feedback">Az email cím megadása kötelező.</div>
+          }
+          @if (loginForm.controls.email.touched && loginForm.controls.email.hasError('email')) {
+            <div class="invalid-feedback">Adj meg egy érvényes email címet.</div>
+          }
+        </div>
+
+        <div class="field-group">
+          <label for="password">Jelszó</label>
+          <input
+            id="password"
+            type="password"
+            class="form-control"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="Jelszó"
+            [class.is-invalid]="loginForm.controls.password.touched && loginForm.controls.password.invalid">
+          @if (loginForm.controls.password.touched && loginForm.controls.password.hasError('required')) {
+            <div class="invalid-feedback">A jelszó megadása kötelező.</div>
+          }
+        </div>
+
+        <button type="submit" class="auth-submit" [disabled]="isLoading">
+          @if (isLoading) {
+            <span class="spinner-border spinner-border-sm"></span>
+            Bejelentkezés...
+          } @else {
+            Bejelentkezés
+            <i class="bi bi-arrow-right"></i>
+          }
+        </button>
+      </form>
+
+      <div class="auth-switch">
+        <span>Nincs még fiókod?</span>
+        <a routerLink="/register">Regisztráció</a>
+      </div>
+    </div>
+  </div>
+</section>

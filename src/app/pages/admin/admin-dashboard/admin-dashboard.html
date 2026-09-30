@@ -1,0 +1,731 @@
+<div class="admin-dashboard">
+  @if (loading) {
+    <div class="dashboard-loading">
+      <div class="spinner-border"></div>
+      <span>Dashboard betöltése...</span>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+  } @else if (stats) {
+    <section class="dashboard-hero">
+      <div class="hero-content">
+        <span class="hero-badge">
+          <i class="bi bi-grid-1x2-fill"></i>
+          Getingo Admin
+        </span>
+
+        <h1>Dashboard</h1>
+
+        <p>
+          Felhasználók, tananyagok, aktivitások és teljesítmények egy helyen.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <a
+          class="hero-button primary"
+          routerLink="/admin/lessons">
+          <i class="bi bi-plus-lg"></i>
+          Új tananyag
+        </a>
+
+        <a
+          class="hero-button"
+          routerLink="/admin/quizzes">
+          <i class="bi bi-patch-question"></i>
+          Új kvíz
+        </a>
+      </div>
+    </section>
+
+    <section class="dashboard-section">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">Áttekintés</span>
+          <h2>Fő statisztikák</h2>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon blue">
+              <i class="bi bi-people"></i>
+            </div>
+
+            <span class="stat-badge">
+              Felhasználók
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Összes felhasználó
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.total_users }}
+            </strong>
+
+            <span class="stat-description">
+              {{ stats.summary.students }} diák •
+              {{ stats.summary.admins }} admin
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon green">
+              <i class="bi bi-book"></i>
+            </div>
+
+            <span class="stat-badge success">
+              Tananyag
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Leckék
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.total_lessons }}
+            </strong>
+
+            <span class="stat-description">
+              {{ stats.summary.total_categories }} kategóriában
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon purple">
+              <i class="bi bi-patch-question"></i>
+            </div>
+
+            <span class="stat-badge admin">
+              Kvíz
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Összes kvíz
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.total_quizzes }}
+            </strong>
+
+            <span class="stat-description">
+              {{ stats.summary.completed_quizzes }} teljesítés
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon orange">
+              <i class="bi bi-code-square"></i>
+            </div>
+
+            <span class="stat-badge">
+              Projektek
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Projektek
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.total_projects }}
+            </strong>
+
+            <span class="stat-description">
+              Gyakorlóprojektek
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon cyan">
+              <i class="bi bi-journal-text"></i>
+            </div>
+
+            <span class="stat-badge">
+              Jegyzet
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Felhasználói jegyzetek
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.total_notes }}
+            </strong>
+
+            <span class="stat-description">
+              Mentett jegyzetek
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon yellow">
+              <i class="bi bi-star"></i>
+            </div>
+
+            <span class="stat-badge">
+              Kedvencek
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Kedvencek
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.total_favorites }}
+            </strong>
+
+            <span class="stat-description">
+              Elmentett tartalmak
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon red">
+              <i class="bi bi-person-x"></i>
+            </div>
+
+            <span class="stat-badge danger">
+              Tiltott
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Tiltott felhasználók
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.banned_users }}
+            </strong>
+
+            <span class="stat-description">
+              Jelenleg tiltott fiókok
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon green">
+              <i class="bi bi-check-circle"></i>
+            </div>
+
+            <span class="stat-badge success">
+              Teljesítés
+            </span>
+          </div>
+
+          <div class="stat-content">
+            <span class="stat-label">
+              Lecke teljesítések
+            </span>
+
+            <strong class="stat-number">
+              {{ stats.summary.completed_lessons }}
+            </strong>
+
+            <span class="stat-description">
+              Befejezett leckék
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-section business-overview">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">Üzlet</span>
+          <h2>Előfizetések és bevételek</h2>
+        </div>
+
+        <div class="business-links">
+          <a class="panel-link" routerLink="/admin/subscriptions">Előfizetések</a>
+          <a class="panel-link" routerLink="/admin/revenue">Bevételek</a>
+        </div>
+      </div>
+
+      <div class="business-grid">
+        <a class="business-card premium-card" routerLink="/admin/subscriptions">
+          <div class="business-icon"><i class="bi bi-credit-card"></i></div>
+          <div>
+            <span>Aktív Premium előfizetések</span>
+            <strong>{{ subscriptions?.summary?.active ?? 0 }}</strong>
+            <small>{{ subscriptions?.summary?.past_due ?? 0 }} fizetési probléma • {{ subscriptions?.summary?.canceled ?? 0 }} lemondott</small>
+          </div>
+          <i class="bi bi-arrow-up-right business-arrow"></i>
+        </a>
+
+        <a class="business-card revenue-card" routerLink="/admin/revenue">
+          <div class="business-icon"><i class="bi bi-graph-up-arrow"></i></div>
+          <div>
+            <span>Aktuális havi bevétel</span>
+            <strong>{{ money(revenue?.summary?.current_month_revenue) }}</strong>
+            <small>MRR: {{ money(revenue?.summary?.mrr) }} • {{ revenue?.summary?.successful_payments ?? 0 }} sikeres befizetés</small>
+          </div>
+          <i class="bi bi-arrow-up-right business-arrow"></i>
+        </a>
+      </div>
+    </section>
+
+    <section class="dashboard-content-grid">
+      <div class="dashboard-panel performance-panel">
+        <div class="panel-header">
+          <div>
+            <span class="section-eyebrow">
+              Teljesítmény
+            </span>
+
+            <h2>Tanulási mutatók</h2>
+          </div>
+
+          <i class="bi bi-activity panel-icon"></i>
+        </div>
+
+        <div class="metric">
+          <div class="metric-header">
+            <div>
+              <span>Lecke teljesítési arány</span>
+              <small>
+                Teljesített leckék aránya
+              </small>
+            </div>
+
+            <strong>
+              {{
+                stats.performance.lesson_completion_rate
+                  | number:'1.0-1'
+              }}%
+            </strong>
+          </div>
+
+          <div class="progress-track">
+            <div
+              class="progress-value blue-progress"
+              [style.width.%]="stats.performance.lesson_completion_rate">
+            </div>
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-header">
+            <div>
+              <span>Kvíz teljesítési arány</span>
+              <small>
+                Teljesített kvízek aránya
+              </small>
+            </div>
+
+            <strong>
+              {{
+                stats.performance.quiz_completion_rate
+                  | number:'1.0-1'
+              }}%
+            </strong>
+          </div>
+
+          <div class="progress-track">
+            <div
+              class="progress-value green-progress"
+              [style.width.%]="stats.performance.quiz_completion_rate">
+            </div>
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-header">
+            <div>
+              <span>Engagement score</span>
+              <small>
+                Felhasználói aktivitási mutató
+              </small>
+            </div>
+
+            <strong>
+              {{
+                stats.performance.engagement_score
+                  | number:'1.0-1'
+              }}/100
+            </strong>
+          </div>
+
+          <div class="progress-track">
+            <div
+              class="progress-value purple-progress"
+              [style.width.%]="stats.performance.engagement_score">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-panel growth-panel">
+        <div class="panel-header">
+          <div>
+            <span class="section-eyebrow">
+              Növekedés
+            </span>
+
+            <h2>Regisztrációk</h2>
+          </div>
+
+          <i class="bi bi-graph-up-arrow panel-icon"></i>
+        </div>
+
+        <div class="growth-list">
+          <div class="growth-item">
+            <div class="growth-icon">
+              <i class="bi bi-calendar-day"></i>
+            </div>
+
+            <div>
+              <span>Ma</span>
+              <small>Új felhasználók</small>
+            </div>
+
+            <strong>
+              {{ stats.growth.users_today }}
+            </strong>
+          </div>
+
+          <div class="growth-item">
+            <div class="growth-icon">
+              <i class="bi bi-calendar-week"></i>
+            </div>
+
+            <div>
+              <span>Ez a hét</span>
+              <small>Új felhasználók</small>
+            </div>
+
+            <strong>
+              {{ stats.growth.users_this_week }}
+            </strong>
+          </div>
+
+          <div class="growth-item">
+            <div class="growth-icon">
+              <i class="bi bi-calendar3"></i>
+            </div>
+
+            <div>
+              <span>Ez a hónap</span>
+              <small>Új felhasználók</small>
+            </div>
+
+            <strong>
+              {{ stats.growth.users_this_month }}
+            </strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-content-grid second-grid">
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <div>
+            <span class="section-eyebrow">
+              Tartalom
+            </span>
+
+            <h2>Top kategóriák</h2>
+          </div>
+
+          <a
+            class="panel-link"
+            routerLink="/admin/categories">
+            Összes
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="category-list">
+          @for (
+            category of stats.top_categories;
+            track category.id
+          ) {
+            <div class="category-item">
+              <div class="category-icon">
+                <i class="bi bi-folder"></i>
+              </div>
+
+              <div class="category-data">
+                <strong>
+                  {{ category.name }}
+                </strong>
+
+                <span>
+                  {{ category.lessons_count }} lecke
+                </span>
+              </div>
+
+              <div class="category-count">
+                {{ category.lessons_count }}
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-state">
+              <i class="bi bi-folder-x"></i>
+              <span>Még nincs kategória.</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <div>
+            <span class="section-eyebrow">
+              Felhasználók
+            </span>
+
+            <h2>Legutóbbi regisztrációk</h2>
+          </div>
+
+          <a
+            class="panel-link"
+            routerLink="/admin/users">
+            Összes
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="recent-users">
+          @for (
+            user of stats.recent_users;
+            track user.id
+          ) {
+            <div class="recent-user">
+              <div class="user-avatar">
+                {{ user.name.charAt(0).toUpperCase() }}
+              </div>
+
+              <div class="user-data">
+                <strong>
+                  {{ user.name }}
+                </strong>
+
+                <span>
+                  {{ user.email }}
+                </span>
+
+                <small>
+                  {{
+                    user.created_at
+                      | date:'yyyy.MM.dd HH:mm'
+                  }}
+                </small>
+              </div>
+
+              <span
+                class="user-role"
+                [class.admin-role]="user.role === 'admin'">
+                {{ user.role }}
+              </span>
+            </div>
+          } @empty {
+            <div class="empty-state">
+              <i class="bi bi-person-x"></i>
+              <span>Még nincs felhasználó.</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-bottom-grid">
+      <div class="dashboard-panel quick-panel">
+        <div class="panel-header">
+          <div>
+            <span class="section-eyebrow">
+              Admin eszközök
+            </span>
+
+            <h2>Gyors műveletek</h2>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <a routerLink="/admin/lessons">
+            <div class="quick-icon">
+              <i class="bi bi-book"></i>
+            </div>
+
+            <div class="quick-text">
+              <strong>Tananyag létrehozása</strong>
+              <span>Új lecke hozzáadása</span>
+            </div>
+
+            <i class="bi bi-chevron-right arrow"></i>
+          </a>
+
+          <a routerLink="/admin/quizzes">
+            <div class="quick-icon">
+              <i class="bi bi-patch-question"></i>
+            </div>
+
+            <div class="quick-text">
+              <strong>Kvíz létrehozása</strong>
+              <span>Új kérdés hozzáadása</span>
+            </div>
+
+            <i class="bi bi-chevron-right arrow"></i>
+          </a>
+
+          <a routerLink="/admin/exercises">
+            <div class="quick-icon">
+              <i class="bi bi-check2-square"></i>
+            </div>
+
+            <div class="quick-text">
+              <strong>Feladat létrehozása</strong>
+              <span>Új gyakorlófeladat</span>
+            </div>
+
+            <i class="bi bi-chevron-right arrow"></i>
+          </a>
+
+          <a routerLink="/admin/projects">
+            <div class="quick-icon">
+              <i class="bi bi-code-square"></i>
+            </div>
+
+            <div class="quick-text">
+              <strong>Projekt létrehozása</strong>
+              <span>Új gyakorlóprojekt</span>
+            </div>
+
+            <i class="bi bi-chevron-right arrow"></i>
+          </a>
+
+          <a routerLink="/admin/categories">
+            <div class="quick-icon">
+              <i class="bi bi-folder-plus"></i>
+            </div>
+
+            <div class="quick-text">
+              <strong>Kategóriák</strong>
+              <span>Kategóriák kezelése</span>
+            </div>
+
+            <i class="bi bi-chevron-right arrow"></i>
+          </a>
+
+          <a routerLink="/admin/users">
+            <div class="quick-icon">
+              <i class="bi bi-people"></i>
+            </div>
+
+            <div class="quick-text">
+              <strong>Felhasználók</strong>
+              <span>Fiókok és jogosultságok</span>
+            </div>
+
+            <i class="bi bi-chevron-right arrow"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="dashboard-panel system-panel">
+        <div class="panel-header">
+          <div>
+            <span class="section-eyebrow">
+              Rendszer
+            </span>
+
+            <h2>Admin központ</h2>
+          </div>
+
+          <span class="online-status">
+            <span></span>
+            Aktív
+          </span>
+        </div>
+
+        <div class="system-list">
+          <div class="system-item">
+            <div>
+              <i class="bi bi-shield-check"></i>
+              <span>Admin hozzáférés</span>
+            </div>
+
+            <strong>Aktív</strong>
+          </div>
+
+          <div class="system-item">
+            <div>
+              <i class="bi bi-people"></i>
+              <span>Felhasználók</span>
+            </div>
+
+            <strong>
+              {{ stats.summary.total_users }}
+            </strong>
+          </div>
+
+          <div class="system-item">
+            <div>
+              <i class="bi bi-book"></i>
+              <span>Tananyagok</span>
+            </div>
+
+            <strong>
+              {{ stats.summary.total_lessons }}
+            </strong>
+          </div>
+
+          <div class="system-item">
+            <div>
+              <i class="bi bi-patch-question"></i>
+              <span>Kvízek</span>
+            </div>
+
+            <strong>
+              {{ stats.summary.total_quizzes }}
+            </strong>
+          </div>
+        </div>
+
+        <a
+          class="audit-link"
+          routerLink="/admin/audit-logs">
+
+          <div>
+            <i class="bi bi-shield-lock"></i>
+            <span>Audit napló megnyitása</span>
+          </div>
+
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </section>
+  }
+</div>

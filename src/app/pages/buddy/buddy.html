@@ -1,0 +1,37 @@
+<main class="buddy-page">
+  <header class="buddy-header">
+    <div><span class="eyebrow">Getingo Buddy 3D</span><h1>Pixel saját világa</h1><p>Riggelt GLB/WebGL 3D karakter valódi animációkkal, simogatással, etetéssel, játékkal és 100 szintes evolúcióval.</p></div>
+    <div class="header-actions"><a routerLink="/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>@if (premium) { <span class="pro"><i class="bi bi-stars"></i> PREMIUM 3D</span> }</div>
+  </header>
+
+  @if (loading) { <div class="loading"><span class="spinner-border"></span> Pixel szobájának betöltése...</div> }
+  @else if (state) {
+    <section class="room-tabs">
+      <button [class.active]="room==='studio'" (click)="switchRoom('studio')"><i class="bi bi-code-square"></i><span>Tech stúdió</span></button>
+      <button [class.active]="room==='play'" (click)="switchRoom('play')"><i class="bi bi-controller"></i><span>Játékszoba</span></button>
+      <button [class.active]="room==='night'" (click)="switchRoom('night')"><i class="bi bi-moon-stars"></i><span>Éjszakai mód</span></button>
+    </section>
+
+    <section class="buddy-grid">
+      <article class="stage-card">
+        <app-buddy-3d [state]="state" [premium]="premium" [room]="room"></app-buddy-3d>
+        <div class="stage-overlay top"><span>{{ state.growth.name }}</span><strong>Szint {{ state.growth.level }} / 100</strong></div>
+        <button class="pet-button" type="button" (click)="pet()"><i class="bi bi-hand-index-thumb"></i> Simogatás</button>
+      </article>
+
+      <aside class="care-card">
+        <div class="identity"><div><span>Korszak {{ state.growth.era }}/10</span><h2>{{ state.companion.name }}</h2><p>{{ state.mood.name }} · {{ state.mood.score }}% hangulat</p></div><div class="points"><span>Gondozási pont</span><strong>{{ state.companion.care_points }}</strong></div></div>
+        <div class="tip"><i class="bi bi-lightbulb"></i><span>{{ tip() }}</span></div>
+        <div class="meter"><div><span>Víz</span><strong>{{ state.companion.water }}%</strong></div><div class="track water"><span [style.width.%]="state.companion.water"></span></div></div>
+        <div class="meter"><div><span>Jóllakottság</span><strong>{{ state.companion.hunger }}%</strong></div><div class="track food"><span [style.width.%]="state.companion.hunger"></span></div></div>
+        <div class="meter"><div><span>Kedv</span><strong>{{ state.companion.happiness }}%</strong></div><div class="track happy"><span [style.width.%]="state.companion.happiness"></span></div></div>
+        <div class="actions"><button (click)="care('water')" [disabled]="action!==null"><b>💧</b><span>Itatás</span><small>-{{ actionCost('water') }} pont</small></button><button (click)="care('feed')" [disabled]="action!==null"><b>🐟</b><span>Etetés</span><small>-{{ actionCost('feed') }} pont</small></button><button (click)="care('play')" [disabled]="action!==null"><b>✨</b><span>Játék</span><small>-{{ actionCost('play') }} pont</small></button><button (click)="rest()" [disabled]="action!==null"><b>🌙</b><span>Pihenés</span><small>animáció</small></button></div>
+        @if(message){<div class="message ok">{{ message }}</div>} @if(error){<div class="message error">{{ error }}</div>}
+      </aside>
+    </section>
+
+    <section class="progress-card"><div class="progress-head"><div><span>Fejlődés</span><h2>{{ state.growth.name }}</h2></div><strong>{{ state.growth.progress_percentage }}%</strong></div><div class="growth-track"><span [style.width.%]="state.growth.progress_percentage"></span></div><div class="roadmap">@for (era of [1,2,3,4,5,6,7,8,9,10]; track era) { <span [class.reached]="state.growth.era>=era" [class.current]="state.growth.era===era">{{ era }}</span> }</div></section>
+
+    <section class="skins-card"><div class="section-head"><div><span class="eyebrow">Megjelenés</span><h2>3D skinek</h2></div><p>A Premium skinek csak aktív Premium előfizetéssel választhatók.</p></div><div class="skins-grid">@for (skin of state.available_skins; track skin.key) { <button [class.selected]="state.companion.selected_skin===skin.key" [class.locked]="!skin.unlocked" (click)="selectSkin(skin)"><span class="skin-swatch" [class]="'skin-swatch '+skin.key"></span><strong>{{ skin.name }}</strong><small>{{ skin.premium ? 'Premium' : 'Free' }}</small>@if(!skin.unlocked){<i class="bi bi-lock-fill"></i>}</button> }</div></section>
+  }
+</main>

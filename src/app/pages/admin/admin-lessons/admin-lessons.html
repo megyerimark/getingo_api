@@ -1,0 +1,258 @@
+<div class="admin-page">
+  <div class="page-header">
+    <div>
+      <span class="page-eyebrow">Tartalomkezelés</span>
+      <h1>Tananyagok</h1>
+      <p>Fő kategóriák, fejezetek és leckék hierarchikus kezelése.</p>
+    </div>
+  </div>
+
+  <div class="page-stats">
+    <div class="mini-card">
+      <span>Összes tananyag</span>
+      <strong>{{ lessons.length }}</strong>
+    </div>
+    <div class="mini-card">
+      <span>Fő kategóriák</span>
+      <strong>{{ categories.length }}</strong>
+    </div>
+    <div class="mini-card">
+      <span>Fejezetek</span>
+      <strong>{{ sections.length }}</strong>
+    </div>
+  </div>
+
+  @if (message) {
+    <div class="alert alert-success">{{ message }}</div>
+  }
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+
+  <section class="admin-card section-manager">
+    <div class="lesson-list-header">
+      <div>
+        <span class="page-eyebrow">Kurzusstruktúra</span>
+        <h2>{{ editingSection ? 'Fejezet szerkesztése' : 'Új fejezet' }}</h2>
+        <p>Például: JavaScript → Alapok → Mi az a JavaScript?</p>
+      </div>
+    </div>
+
+    <form [formGroup]="sectionForm" (ngSubmit)="saveSection()">
+      <div class="admin-form-grid section-form-grid">
+        <div class="admin-field">
+          <label>Fő kategória</label>
+          <select formControlName="category_id">
+            <option [ngValue]="null">Válassz kategóriát</option>
+            @for (category of categories; track category.id) {
+              <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="admin-field">
+          <label>Fejezet neve</label>
+          <input type="text" formControlName="name" (input)="sectionNameChanged()" placeholder="Pl. Alapok">
+        </div>
+
+        <div class="admin-field">
+          <label>Slug</label>
+          <input type="text" formControlName="slug" placeholder="alapok">
+        </div>
+
+        <div class="admin-field">
+          <label>Sorrend</label>
+          <input type="number" min="0" step="10" formControlName="sort_order">
+        </div>
+
+        <div class="admin-field full">
+          <label>Rövid leírás</label>
+          <input type="text" formControlName="description" placeholder="Pl. Változók, konzol, operátorok és az első JavaScript lépések.">
+        </div>
+      </div>
+
+      <div class="admin-actions">
+        <button class="admin-button primary" type="submit" [disabled]="sectionSaving || sectionForm.invalid">
+          {{ sectionSaving ? 'Mentés...' : (editingSection ? 'Fejezet módosítása' : 'Fejezet létrehozása') }}
+        </button>
+        @if (editingSection) {
+          <button class="admin-button secondary" type="button" (click)="cancelSectionEdit()">Mégse</button>
+        }
+      </div>
+    </form>
+
+    <div class="section-list">
+      @for (category of categories; track category.id) {
+        @if (sectionCountForCategory(category.id) > 0) {
+          <div class="section-category-block">
+            <div class="section-category-title">
+              <strong>{{ category.name }}</strong>
+              <span>{{ sectionCountForCategory(category.id) }}</span>
+            </div>
+
+            @for (section of sections; track section.id) {
+              @if (section.category_id === category.id) {
+                <div class="section-row">
+                  <div class="section-order">{{ section.sort_order }}</div>
+                  <div class="section-data">
+                    <strong>{{ section.name }}</strong>
+                    <span>/{{ section.slug }} • {{ section.lessons_count ?? 0 }} lecke</span>
+                  </div>
+                  <div class="table-actions">
+                    <button class="admin-button secondary" type="button" (click)="editSection(section)">Szerkesztés</button>
+                    <button class="admin-button danger" type="button" (click)="deleteSection(section)">Törlés</button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
+      }
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <h2>{{ editingLesson ? 'Tananyag szerkesztése' : 'Új tananyag' }}</h2>
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="admin-form-grid">
+        <div class="admin-field">
+          <label>Fő kategória</label>
+          <select formControlName="category_id">
+            <option [ngValue]="null">Válassz kategóriát</option>
+            @for (category of categories; track category.id) {
+              <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="admin-field">
+          <label>Fejezet</label>
+          <select formControlName="lesson_section_id">
+            <option [ngValue]="null">Válassz fejezetet</option>
+            @for (section of availableSections; track section.id) {
+              <option [ngValue]="section.id">{{ section.name }}</option>
+            }
+          </select>
+          @if (form.controls.category_id.value && !availableSections.length) {
+            <small class="field-help warning">Ehhez a kategóriához előbb hozz létre egy fejezetet.</small>
+          }
+        </div>
+
+        <div class="admin-field">
+          <label>Lecke sorrendje</label>
+          <input type="number" min="0" step="10" formControlName="sort_order">
+        </div>
+
+        <div class="admin-field">
+          <label>Cím</label>
+          <input type="text" formControlName="title" (input)="titleChanged()" placeholder="Pl. JavaScript változók">
+        </div>
+
+        <div class="admin-field full">
+          <label>Slug</label>
+          <input type="text" formControlName="slug" placeholder="javascript-valtozok">
+        </div>
+
+        <div class="admin-field full">
+          <label>Tananyag szövege</label>
+          <textarea rows="10" formControlName="content" placeholder="A tananyag szövege..."></textarea>
+        </div>
+      </div>
+
+      <div class="code-section">
+        <div class="code-section-header">
+          <div>
+            <h3>Kódpéldák</h3>
+            <p>Ezek jelennek meg a tanulónak a „Próbáld ki” szerkesztőben.</p>
+          </div>
+        </div>
+
+        <div class="code-fields">
+          <div class="code-field">
+            <div class="code-title html-title"><i class="bi bi-filetype-html"></i> HTML</div>
+            <textarea class="code-input" formControlName="example_html" spellcheck="false" placeholder="<h1>Hello World!</h1>"></textarea>
+          </div>
+          <div class="code-field">
+            <div class="code-title css-title"><i class="bi bi-filetype-css"></i> CSS</div>
+            <textarea class="code-input" formControlName="example_css" spellcheck="false" placeholder="h1 { font-size: 32px; }"></textarea>
+          </div>
+          <div class="code-field">
+            <div class="code-title js-title"><i class="bi bi-filetype-js"></i> JavaScript</div>
+            <textarea class="code-input" formControlName="example_javascript" spellcheck="false" placeholder="console.log('Hello World!');"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-actions">
+        <button class="admin-button primary" type="submit" [disabled]="saving || form.invalid">
+          {{ saving ? 'Mentés...' : (editingLesson ? 'Módosítás mentése' : 'Tananyag létrehozása') }}
+        </button>
+        @if (editingLesson) {
+          <button class="admin-button secondary" type="button" (click)="cancelEdit()">Mégse</button>
+        }
+      </div>
+    </form>
+  </section>
+
+  <section class="admin-card">
+    <div class="lesson-list-header">
+      <div>
+        <h2>Meglévő tananyagok</h2>
+        <p>A leckék fő kategória → fejezet → sorrend szerint.</p>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="text-center py-5"><div class="spinner-border"></div></div>
+    } @else {
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tananyag</th>
+              <th>Fő kategória</th>
+              <th>Fejezet</th>
+              <th>Sorrend</th>
+              <th>Kód</th>
+              <th>Műveletek</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lesson of lessons; track lesson.id) {
+              <tr>
+                <td>#{{ lesson.id }}</td>
+                <td>
+                  <strong>{{ lesson.title }}</strong>
+                  <div class="lesson-slug">/{{ lesson.slug }}</div>
+                </td>
+                <td><span class="status-badge">{{ getCategoryName(lesson.category_id) }}</span></td>
+                <td><span class="section-badge">{{ getSectionName(lesson.lesson_section_id) }}</span></td>
+                <td>{{ lesson.sort_order }}</td>
+                <td>
+                  <div class="code-badges">
+                    @if (lesson.example_html) { <span class="html-badge">HTML</span> }
+                    @if (lesson.example_css) { <span class="css-badge">CSS</span> }
+                    @if (lesson.example_javascript || lesson.example_code) { <span class="js-badge">JS</span> }
+                    @if (!lesson.example_html && !lesson.example_css && !lesson.example_javascript && !lesson.example_code) {
+                      <span class="empty-code">Nincs kód</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="table-actions">
+                    <button class="admin-button secondary" type="button" (click)="edit(lesson)">Szerkesztés</button>
+                    <button class="admin-button danger" type="button" (click)="deleteLesson(lesson)">Törlés</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-admin">Még nincs tananyag.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

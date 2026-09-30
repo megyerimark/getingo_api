@@ -1,0 +1,22 @@
+<section class="success-page">
+  <div class="success-card">
+    @if (state === 'checking') {
+      <div class="success-icon loading"><span class="spinner-border"></span></div>
+      <span class="kicker">STRIPE FIZETÉS</span>
+      <h1>Aktiváljuk a Premium fiókodat...</h1>
+      <p>A Stripe visszaigazolását ellenőrizzük. Ez általában csak néhány másodperc.</p>
+    } @else if (state === 'active') {
+      <div class="success-icon"><i class="bi bi-stars"></i></div>
+      <span class="kicker">GETINGO PREMIUM</span>
+      <h1>Premium aktiválva.</h1>
+      <p>Mostantól az exkluzív Getingo megjelenés és Premium vizuális élmény aktív a fiókodon.</p>
+      <a routerLink="/dashboard" class="success-button">Irány a dashboard <i class="bi bi-arrow-right"></i></a>
+    } @else {
+      <div class="success-icon pending"><i class="bi bi-clock-history"></i></div>
+      <span class="kicker">FELDOLGOZÁS</span>
+      <h1>A fizetés feldolgozás alatt.</h1>
+      <p>Ha a Stripe fizetés sikeres volt, a Premium állapot rövidesen automatikusan megjelenik. Frissítsd az oldalt vagy térj vissza a Premium oldalra.</p>
+      <a routerLink="/premium" class="success-button">Premium oldal</a>
+    }
+  </div>
+</section>

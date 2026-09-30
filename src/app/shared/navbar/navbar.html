@@ -1,0 +1,98 @@
+<nav class="site-navbar">
+  <div class="nav-shell">
+    <a class="brand" routerLink="/" (click)="closeMenu()" aria-label="Getingo főoldal">
+      <span class="brand-mark">G</span>
+      <span class="brand-name">Getingo</span>
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-label="Menü megnyitása"
+      aria-controls="mainNavbar"
+      [attr.aria-expanded]="isMenuOpen"
+      (click)="toggleMenu()">
+      <i class="bi" [class.bi-list]="!isMenuOpen" [class.bi-x-lg]="isMenuOpen"></i>
+    </button>
+
+    <div id="mainNavbar" class="nav-content" [class.open]="isMenuOpen">
+      <div class="nav-links">
+        <a
+          routerLink="/"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeMenu()">
+          Főoldal
+        </a>
+
+        <a routerLink="/categories" routerLinkActive="active" (click)="closeMenu()">
+          Tananyagok
+        </a>
+
+        @if (auth.currentUser()?.email_verified_at) {
+          <a routerLink="/projects" routerLinkActive="active" (click)="closeMenu()">
+            Projektek
+          </a>
+          <a routerLink="/portfolio" routerLinkActive="active" (click)="closeMenu()">
+            Portfólió
+          </a>
+          <a routerLink="/buddy" routerLinkActive="active" (click)="closeMenu()">
+            <i class="bi bi-stars"></i> Buddy 3D
+          </a>
+        }
+
+        <a routerLink="/search" routerLinkActive="active" (click)="closeMenu()">
+          <i class="bi bi-search"></i>
+          Keresés
+        </a>
+
+      <!--   <a class="premium-nav-link" routerLink="/premium" routerLinkActive="active" (click)="closeMenu()">
+          <i class="bi bi-stars"></i>
+          Premium
+        </a> -->
+      </div>
+
+      <div class="nav-actions">
+        @if (auth.currentUser(); as user) {
+          <span class="user-chip" [class.premium-user-chip]="user.is_premium">
+            <span class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</span>
+            <span>{{ user.name }}</span>
+            @if (user.is_premium) {
+              <span class="premium-mini-badge"><i class="bi bi-stars"></i> PRO</span>
+            }
+          </span>
+
+          @if (!user.email_verified_at) {
+            <a class="action-button primary" routerLink="/verify-email" (click)="closeMenu()">
+              <i class="bi bi-envelope-check"></i>
+              Email megerősítése
+            </a>
+          } @else if (user.role === 'admin') {
+            <a class="action-button ghost" routerLink="/admin" (click)="closeMenu()">
+              <i class="bi bi-grid"></i>
+              Admin
+            </a>
+          } @else {
+            <a class="action-button ghost" routerLink="/dashboard" (click)="closeMenu()">
+              <i class="bi bi-person"></i>
+              Fiókom
+            </a>
+          }
+
+          <button class="logout-button" type="button" (click)="logout()">
+            <i class="bi bi-box-arrow-right"></i>
+            Kilépés
+          </button>
+        } @else {
+          <a class="action-button ghost" routerLink="/login" (click)="closeMenu()">
+            Belépés
+          </a>
+
+          <a class="action-button primary" routerLink="/register" (click)="closeMenu()">
+            Regisztráció
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+</nav>
