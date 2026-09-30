@@ -20,12 +20,13 @@ class EmailVerificationTest extends TestCase
     {
         Notification::fake();
 
-        $this->postJson('/api/regisztracio', [
-            'name' => 'Teszt Elek',
-            'email' => 'teszt@example.com',
-            'password' => 'StrongPassword123',
-            'password_confirmation' => 'StrongPassword123',
-        ])->assertCreated();
+    $response = $this->postJson('/api/regisztracio', [
+    'name' => 'Teszt Elek',
+    'email' => 'teszt@example.com',
+    'password' => 'StrongPassword123',
+    'password_confirmation' => 'StrongPassword123',
+    'privacy_accepted' => true,
+])->assertCreated();
 
         $user = User::where('email', 'teszt@example.com')->firstOrFail();
 
