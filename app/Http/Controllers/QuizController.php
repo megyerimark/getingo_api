@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Quiz;
 use App\Models\QuizCompletion;
 use App\Services\CompanionService;
+use App\Services\LearningExperienceService;
 use Illuminate\Http\Request;
 
 class QuizController extends Controller
 {
-    public function __construct(private CompanionService $companionService)
-    {
+    public function __construct(
+        private CompanionService $companionService,
+        private LearningExperienceService $learningExperience
+    ) {
     }
 
     public function byLesson($lessonId)
@@ -68,12 +71,14 @@ class QuizController extends Controller
 
         if ($completion->wasRecentlyCreated) {
             $this->companionService->awardLearningPoints($user, 5);
+            $unlocked = $this->learningExperience->recordLearningActivity($user->fresh());
 
             return response()->json([
                 'correct' => true,
                 'message' => 'Helyes válasz! +5 XP',
                 'xp_awarded' => 5,
-                'current_xp' => $user->fresh()->xp_points
+                'current_xp' => $user->fresh()->xp_points,
+                'unlocked_achievements' => $unlocked,
             ]);
         }
 
@@ -81,7 +86,8 @@ class QuizController extends Controller
             'correct' => true,
             'message' => 'Helyes válasz! Ezt a kvízt már korábban teljesítetted.',
             'xp_awarded' => 0,
-            'current_xp' => $user->xp_points
+            'current_xp' => $user->xp_points,
+            'unlocked_achievements' => [],
         ]);
     }
 }

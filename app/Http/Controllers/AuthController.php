@@ -14,7 +14,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->merge([
-            'email' => Str::lower(trim((string) $request->email))
+            'email' => Str::lower(trim((string) $request->email)),
         ]);
 
         $validated = $request->validate([
@@ -23,14 +23,20 @@ class AuthController extends Controller
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(12)->mixedCase()->numbers()
-            ]
+                Password::min(12)->mixedCase()->numbers(),
+            ],
+            'privacy_accepted' => ['required', 'accepted'],
+        ], [
+            'privacy_accepted.accepted' => 'A regisztrációhoz el kell fogadnod az Adatkezelési tájékoztatót.',
+            'privacy_accepted.required' => 'A regisztrációhoz el kell fogadnod az Adatkezelési tájékoztatót.',
         ]);
 
         $user = User::create([
             'name' => trim($validated['name']),
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password'])
+            'password' => Hash::make($validated['password']),
+            'privacy_accepted_at' => now(),
+            'privacy_policy_version' => config('privacy.version'),
         ]);
 
         $user->sendEmailVerificationNotification();
@@ -43,35 +49,32 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Sikeres regisztráció! Küldtünk egy megerősítő emailt.',
-            'user' => $user->fresh()
+            'user' => $user->fresh(),
         ], 201);
     }
 
     public function login(Request $request)
     {
         $request->merge([
-            'email' => Str::lower(trim((string) $request->email))
+            'email' => Str::lower(trim((string) $request->email)),
         ]);
 
         $validated = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'string']
+            'password' => ['required', 'string'],
         ]);
 
         $user = User::where('email', $validated['email'])->first();
 
-        if (
-            !$user ||
-            !Hash::check($validated['password'], $user->password)
-        ) {
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return response()->json([
-                'message' => 'Hibás email cím vagy jelszó.'
+                'message' => 'Hibás email cím vagy jelszó.',
             ], 401);
         }
 
         if ($user->is_banned) {
             return response()->json([
-                'message' => 'A felhasználói fiók le van tiltva.'
+                'message' => 'A felhasználói fiók le van tiltva.',
             ], 403);
         }
 
@@ -83,14 +86,14 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Sikeres bejelentkezés!',
-            'user' => $user->fresh()
+            'user' => $user->fresh(),
         ], 200);
     }
 
     public function me(Request $request)
     {
         return response()->json([
-            'user' => $request->user()
+            'user' => $request->user()->fresh(),
         ]);
     }
 
@@ -104,7 +107,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Sikeres kijelentkezés!'
+            'message' => 'Sikeres kijelentkezés!',
         ]);
     }
 }

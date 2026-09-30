@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Stripe\StripeClient;
+use Throwable;
 
 class GdprController extends Controller
 {
@@ -23,6 +25,15 @@ class GdprController extends Controller
                 'role' => $user->role,
                 'xp_points' => $user->xp_points,
                 'current_streak' => $user->current_streak,
+                'longest_streak' => $user->longest_streak,
+                'last_learning_activity_on' => $user->last_learning_activity_on,
+                'privacy_accepted_at' => $user->privacy_accepted_at,
+                'privacy_policy_version' => $user->privacy_policy_version,
+                'plan' => $user->plan,
+                'subscription_status' => $user->subscription_status,
+                'subscription_current_period_end' => $user->subscription_current_period_end,
+                'stripe_customer_id' => $user->stripe_customer_id,
+                'stripe_subscription_id' => $user->stripe_subscription_id,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
             ],
@@ -37,6 +48,10 @@ class GdprController extends Controller
                 ->get(),
             'quiz_completions' => $user->quizCompletions()
                 ->select('id', 'user_id', 'quiz_id', 'created_at', 'updated_at')
+                ->get(),
+            'achievements' => $user->userAchievements()
+                ->with('achievement:id,slug,title,description,icon')
+                ->select('id', 'user_id', 'achievement_id', 'unlocked_at', 'created_at', 'updated_at')
                 ->get(),
             'project_submissions' => $user->projectSubmissions()
                 ->select(
@@ -97,6 +112,27 @@ class GdprController extends Controller
             ], 409);
         }
 
+        if ($user->stripe_subscription_id && ! in_array($user->subscription_status, ['canceled', 'incomplete_expired'], true)) {
+            $secret = config('services.stripe.secret');
+
+            if (! $secret) {
+                return response()->json([
+                    'message' => 'Az aktív Stripe előfizetés miatt a fiók törlése most nem hajtható végre. A Stripe konfiguráció hiányzik.',
+                ], 503);
+            }
+
+            try {
+                (new StripeClient($secret))->subscriptions->cancel(
+                    $user->stripe_subscription_id,
+                    []
+                );
+            } catch (Throwable) {
+                return response()->json([
+                    'message' => 'Az előfizetés lemondása nem sikerült, ezért a fiókot biztonsági okból nem töröltük. Próbáld újra később.',
+                ], 502);
+            }
+        }
+
         DB::transaction(function () use ($user): void {
             $user->tokens()->delete();
 
@@ -112,7 +148,7 @@ class GdprController extends Controller
         });
 
         return response()->json([
-            'message' => 'A fiók és a hozzá kapcsolódó személyes adatok törlése megtörtént.',
+            'message' => 'A fiók, a hozzá kapcsolódó személyes adatok és az esetleges Premium előfizetés törlése/lemondása megtörtént.',
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectSubmission;
 use App\Services\CompanionService;
+use App\Services\LearningExperienceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -89,6 +90,41 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * A felhasználó saját, teljesített projektjei.
+     * Az admin solution és expected_output mezők itt sem kerülnek ki az API-ból.
+     */
+    public function portfolio(Request $request): JsonResponse
+    {
+        $items = ProjectSubmission::query()
+            ->where('user_id', $request->user()->id)
+            ->whereNotNull('completed_at')
+            ->with(['project:id,title,description,difficulty,estimated_time,xp_reward'])
+            ->latest('completed_at')
+            ->get()
+            ->map(function (ProjectSubmission $submission): array {
+                return [
+                    'id' => $submission->id,
+                    'project_id' => $submission->project_id,
+                    'title' => $submission->project?->title ?? 'Projekt',
+                    'description' => $submission->project?->description ?? '',
+                    'difficulty' => $submission->project?->difficulty ?? '',
+                    'estimated_time' => (int) ($submission->project?->estimated_time ?? 0),
+                    'xp_awarded' => (int) $submission->xp_awarded,
+                    'completed_at' => $submission->completed_at,
+                    'html_code' => $submission->html_code ?? '',
+                    'css_code' => $submission->css_code ?? '',
+                    'javascript_code' => $submission->javascript_code ?? '',
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'projects' => $items,
+            'count' => $items->count(),
+        ]);
+    }
+
     public function saveWorkspace(Request $request, Project $project): JsonResponse
     {
         $validated = $request->validate([
@@ -115,8 +151,12 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function check(Request $request, Project $project, CompanionService $companionService): JsonResponse
-    {
+    public function check(
+        Request $request,
+        Project $project,
+        CompanionService $companionService,
+        LearningExperienceService $learningExperience
+    ): JsonResponse {
         $validated = $request->validate([
             'console_output' => ['present', 'array', 'max:200'],
             'console_output.*' => ['string', 'max:2000'],
@@ -151,7 +191,7 @@ class ProjectController extends Controller
         if (! $passed) {
             return response()->json([
                 'passed' => false,
-                'message' => 'Még nem teljesen jó. Nézd meg a konzol kimenetét, javítsd a kódot, majd ellenőrizd újra.',
+                'message' => 'Még nem teljesen jó. A Getingo Mentor segíthet megtalálni, hol csúszott el a megoldás.',
                 'console_output' => $actual,
                 'is_completed' => (bool) $submission->completed_at,
             ]);
@@ -195,16 +235,21 @@ class ProjectController extends Controller
             ];
         });
 
+        $unlocked = $award['already_completed']
+            ? []
+            : $learningExperience->recordLearningActivity($request->user()->fresh());
+
         return response()->json([
             'passed' => true,
             'message' => $award['already_completed']
                 ? 'A projekt már korábban teljesítve lett. A megoldásod frissítve.'
-                : 'Sikeres projekt! Megkaptad a jutalmat, Pixel is fejlődött.',
+                : 'Sikeres projekt! Megkaptad a jutalmat, Pixel is fejlődött, a projekt pedig bekerült a portfóliódba.',
             'earned_xp' => $award['earned_xp'],
             'already_completed' => $award['already_completed'],
             'completed_at' => $award['completed_at'],
             'is_completed' => true,
             'xp_points' => (int) $request->user()->fresh()->xp_points,
+            'unlocked_achievements' => $unlocked,
         ]);
     }
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminProjectController;
 use App\Http\Controllers\Admin\AdminQuizController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanionController;
 use App\Http\Controllers\EmailVerificationController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Student\LessonController;
 use App\Http\Controllers\Student\ProjectController;
 use App\Http\Controllers\StudentDashboardController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('throttle:public-api')->group(function () {
@@ -40,6 +42,11 @@ Route::middleware('throttle:public-api')->group(function () {
 Route::get('/search', [SearchController::class, 'index'])
     ->middleware('throttle:search');
 
+Route::get('/billing/plans', [BillingController::class, 'plans'])
+    ->middleware('throttle:public-api');
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
+
 Route::post('/regisztracio', [AuthController::class, 'register'])
     ->middleware('throttle:register');
 
@@ -53,6 +60,8 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/billing/status', [BillingController::class, 'status']);
 
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
         ->middleware('throttle:6,1');
@@ -70,9 +79,15 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->middleware('throttle:gdpr');
 
     Route::middleware('verified')->group(function () {
+        Route::post('/billing/checkout', [BillingController::class, 'checkout'])
+            ->middleware('throttle:6,1');
+        Route::post('/billing/portal', [BillingController::class, 'portal'])
+            ->middleware('throttle:6,1');
+
         Route::get('/dashboard', [StudentDashboardController::class, 'index']);
 
         Route::get('/projects', [ProjectController::class, 'index']);
+        Route::get('/portfolio', [ProjectController::class, 'portfolio']);
         Route::get('/projects/{project}', [ProjectController::class, 'show'])
             ->whereNumber('project');
         Route::put('/projects/{project}/workspace', [ProjectController::class, 'saveWorkspace'])
