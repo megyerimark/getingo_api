@@ -23,8 +23,8 @@ class ProjectLabTest extends TestCase
             'estimated_time' => 15,
             'solution' => 'SECRET_SOLUTION',
             'starter_javascript' => 'let value = 18;',
-            'validation_type' => 'console_exact',
-            'expected_output' => "18\n19",
+            'validation_type' => 'javascript_contains',
+            'expected_output' => "console.log(18)\nconsole.log(19)",
             'xp_reward' => 30,
         ]);
 
@@ -36,7 +36,8 @@ class ProjectLabTest extends TestCase
             ->assertJsonPath('project.xp_reward', 30);
 
         $this->assertStringNotContainsString('SECRET_SOLUTION', $response->getContent());
-        $this->assertStringNotContainsString('18\\n19', $response->getContent());
+        $this->assertStringNotContainsString('console.log(18)', $response->getContent());
+        $this->assertStringNotContainsString('console.log(19)', $response->getContent());
     }
 
     public function test_project_can_be_saved_and_completed_only_once_for_xp(): void
@@ -47,8 +48,8 @@ class ProjectLabTest extends TestCase
             'description' => 'Kimenet ellenőrzés',
             'difficulty' => 'kezdő',
             'estimated_time' => 20,
-            'validation_type' => 'console_exact',
-            'expected_output' => "18\n19",
+            'validation_type' => 'javascript_contains',
+            'expected_output' => "console.log(18)\nconsole.log(19)",
             'xp_reward' => 40,
         ]);
 
@@ -79,7 +80,7 @@ class ProjectLabTest extends TestCase
         $this->assertSame(40, (int) $user->fresh()->xp_points);
     }
 
-    public function test_wrong_console_output_does_not_complete_project(): void
+    public function test_wrong_server_checked_source_does_not_complete_project(): void
     {
         $user = User::factory()->create(['xp_points' => 0]);
         $project = Project::create([
@@ -87,19 +88,48 @@ class ProjectLabTest extends TestCase
             'description' => 'Teszt',
             'difficulty' => 'kezdő',
             'estimated_time' => 10,
-            'validation_type' => 'console_exact',
-            'expected_output' => 'OK',
+            'validation_type' => 'javascript_contains',
+            'expected_output' => 'console.log(\"OK\")',
             'xp_reward' => 20,
         ]);
 
         Sanctum::actingAs($user);
 
         $this->postJson('/api/projects/'.$project->id.'/check', [
-            'console_output' => ['NOPE'],
+            'javascript_code' => 'console.log(\"NOPE\");',
+            'console_output' => ['OK'],
         ])->assertOk()
             ->assertJsonPath('passed', false);
 
         $this->assertSame(0, (int) $user->fresh()->xp_points);
         $this->assertNull(ProjectSubmission::first()->completed_at);
     }
+    public function test_forged_client_console_output_cannot_award_xp(): void
+    {
+        $user = User::factory()->create(['xp_points' => 0]);
+        $project = Project::create([
+            'title' => 'Régi konzolos projekt',
+            'description' => 'Kliensoldali visszajelzés',
+            'difficulty' => 'kezdő',
+            'estimated_time' => 10,
+            'validation_type' => 'console_exact',
+            'expected_output' => 'SECRET',
+            'xp_reward' => 100,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/projects/'.$project->id.'/check', [
+            'javascript_code' => '',
+            'console_output' => ['SECRET'],
+        ])->assertOk()
+            ->assertJsonPath('passed', true)
+            ->assertJsonPath('verified', false)
+            ->assertJsonPath('earned_xp', 0)
+            ->assertJsonPath('is_completed', false);
+
+        $this->assertSame(0, (int) $user->fresh()->xp_points);
+        $this->assertNull(ProjectSubmission::first()->completed_at);
+    }
+
 }

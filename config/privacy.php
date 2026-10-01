@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'version' => env('PRIVACY_POLICY_VERSION', '2026-09-30'),
+    'version' => env('PRIVACY_POLICY_VERSION', '2026-10-01'),
 ];

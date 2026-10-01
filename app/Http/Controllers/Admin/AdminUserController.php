@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminUserController extends Controller
 {
@@ -65,6 +66,12 @@ class AdminUserController extends Controller
 
         if ($user->is_banned) {
             $user->tokens()->delete();
+
+            if (config('session.driver') === 'database') {
+                DB::table((string) config('session.table', 'sessions'))
+                    ->where('user_id', $user->id)
+                    ->delete();
+            }
         }
 
         AuditLogger::record($request, 'user.ban.toggled', $user, [

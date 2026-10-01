@@ -35,7 +35,7 @@ class CompanionController extends Controller
     public function preferences(Request $request)
     {
         $validated = $request->validate([
-            'room' => ['nullable', 'string', 'in:studio,play,night'],
+            'room' => ['nullable', 'string', 'max:30'],
             'skin' => ['nullable', 'string', 'max:50'],
         ]);
 

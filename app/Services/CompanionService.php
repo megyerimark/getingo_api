@@ -13,7 +13,13 @@ class CompanionService
     private const MIN_STAT = 20;
     private const MAX_LEVEL = 100;
 
-    private const ROOMS = ['studio', 'play', 'night'];
+    private const ROOMS = [
+        'studio' => ['name' => 'Tech stúdió', 'premium' => false],
+        'play' => ['name' => 'Játékszoba', 'premium' => false],
+        'night' => ['name' => 'Éjszakai mód', 'premium' => false],
+        'aurora' => ['name' => 'Aurora Lounge', 'premium' => true],
+        'cyber' => ['name' => 'Cyber Deck', 'premium' => true],
+    ];
 
     private const SKINS = [
         'code-kitten-3d' => ['name' => 'Code Kitten', 'premium' => false],
@@ -149,6 +155,13 @@ class CompanionService
             $companion->save();
         }
 
+        if (! $user->is_premium
+            && isset(self::ROOMS[$companion->selected_room])
+            && self::ROOMS[$companion->selected_room]['premium']) {
+            $companion->selected_room = 'studio';
+            $companion->save();
+        }
+
         $this->applyDecay($companion);
         $companion->refresh();
 
@@ -183,7 +196,14 @@ class CompanionService
                     'unlocked' => ! $skin['premium'] || $user->is_premium,
                 ])
                 ->values(),
-            'available_rooms' => self::ROOMS,
+            'available_rooms' => collect(self::ROOMS)
+                ->map(fn (array $room, string $key) => [
+                    'key' => $key,
+                    'name' => $room['name'],
+                    'premium' => $room['premium'],
+                    'unlocked' => ! $room['premium'] || $user->is_premium,
+                ])
+                ->values(),
             'actions' => collect(self::ACTIONS)
                 ->map(fn (array $config, string $key) => [
                     'key' => $key,
@@ -202,8 +222,11 @@ class CompanionService
         $companion = $this->getOrCreate($user);
 
         if ($room !== null) {
-            if (! in_array($room, self::ROOMS, true)) {
+            if (! array_key_exists($room, self::ROOMS)) {
                 throw ValidationException::withMessages(['room' => 'Ismeretlen Buddy szoba.']);
+            }
+            if (self::ROOMS[$room]['premium'] && ! $user->is_premium) {
+                throw ValidationException::withMessages(['room' => 'Ez a szoba Premium előfizetéshez tartozik.']);
             }
             $companion->selected_room = $room;
         }

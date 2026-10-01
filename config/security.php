@@ -7,7 +7,10 @@ $trustedProxies = array_values(array_filter(array_map(
 
 $trustedHosts = array_values(array_filter(array_map(
     'trim',
-    explode(',', (string) env('TRUSTED_HOSTS', ''))
+    explode(',', (string) env(
+        'TRUSTED_HOSTS',
+        '^localhost$,^127\\.0\\.0\\.1$,^(.+\\.)?getingo\\.hu$'
+    ))
 )));
 
 return [

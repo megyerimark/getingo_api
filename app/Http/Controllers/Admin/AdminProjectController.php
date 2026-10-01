@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Services\AuditLogger;
+use App\Services\ProjectValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -80,7 +81,7 @@ class AdminProjectController extends Controller
             'validation_type' => [
                 $partial ? 'sometimes' : 'required',
                 'string',
-                Rule::in(['console_exact', 'console_contains']),
+                Rule::in(array_merge(ProjectValidationService::CLIENT_VALIDATION_TYPES, ProjectValidationService::SERVER_VALIDATION_TYPES)),
             ],
             'expected_output' => ['nullable', 'string', 'max:100000'],
             'xp_reward' => [$partial ? 'sometimes' : 'required', 'integer', 'min:0', 'max:1000'],

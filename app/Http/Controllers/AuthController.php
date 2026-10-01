@@ -27,8 +27,8 @@ class AuthController extends Controller
             ],
             'privacy_accepted' => ['required', 'accepted'],
         ], [
-            'privacy_accepted.accepted' => 'A regisztrációhoz el kell fogadnod az Adatkezelési tájékoztatót.',
-            'privacy_accepted.required' => 'A regisztrációhoz el kell fogadnod az Adatkezelési tájékoztatót.',
+            'privacy_accepted.accepted' => 'A regisztrációhoz el kell olvasnod és tudomásul kell venned az Adatkezelési tájékoztatót.',
+            'privacy_accepted.required' => 'A regisztrációhoz el kell olvasnod és tudomásul kell venned az Adatkezelési tájékoztatót.',
         ]);
 
         $user = User::create([

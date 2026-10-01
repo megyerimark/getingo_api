@@ -139,4 +139,27 @@ class CompanionTest extends TestCase
             ->assertJsonPath('growth.progress_percentage', 100)
             ->assertJsonPath('growth.next_level_points', null);
     }
+    public function test_premium_room_is_enforced_by_backend(): void
+    {
+        $freeUser = User::factory()->create([
+            'plan' => 'free',
+            'subscription_status' => null,
+        ]);
+        Sanctum::actingAs($freeUser);
+
+        $this->patchJson('/api/companion/preferences', ['room' => 'aurora'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('room');
+
+        $premiumUser = User::factory()->create([
+            'plan' => 'premium',
+            'subscription_status' => 'active',
+        ]);
+        Sanctum::actingAs($premiumUser);
+
+        $this->patchJson('/api/companion/preferences', ['room' => 'aurora'])
+            ->assertOk()
+            ->assertJsonPath('companion.selected_room', 'aurora');
+    }
+
 }

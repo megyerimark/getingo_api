@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -60,11 +61,32 @@ class AccountController extends Controller
             ], 422);
         }
 
+        if (Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'message' => 'Az új jelszó legyen eltérő a jelenlegi jelszótól.',
+            ], 422);
+        }
+
         $user->password = $validated['password'];
+        $user->setRememberToken(Str::random(60));
         $user->save();
 
+        if ($request->hasSession()) {
+            $currentSessionId = $request->session()->getId();
+
+            if (config('session.driver') === 'database') {
+                DB::table((string) config('session.table', 'sessions'))
+                    ->where('user_id', $user->id)
+                    ->where('id', '!=', $currentSessionId)
+                    ->delete();
+            }
+
+            $request->session()->regenerate();
+            $request->session()->regenerateToken();
+        }
+
         return response()->json([
-            'message' => 'A jelszó módosítása sikerült.',
+            'message' => 'A jelszó módosítása sikerült. A többi aktív munkamenetet kijelentkeztettük.',
         ]);
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectSubmission;
 use App\Services\CompanionService;
 use App\Services\LearningExperienceService;
+use App\Services\ProjectValidationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -56,7 +57,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function show(Request $request, Project $project): JsonResponse
+    public function show(Request $request, Project $project, ProjectValidationService $validator): JsonResponse
     {
         $submission = ProjectSubmission::query()
             ->where('user_id', $request->user()->id)
@@ -75,6 +76,7 @@ class ProjectController extends Controller
                 'starter_javascript' => $project->starter_javascript ?? '',
                 'validation_type' => $project->validation_type,
                 'validation_configured' => filled($project->expected_output),
+                'validation_trusted' => $validator->isTrustedType($project->validation_type),
                 'xp_reward' => $project->xp_reward,
                 'is_completed' => (bool) $submission?->completed_at,
                 'created_at' => $project->created_at,
@@ -155,10 +157,11 @@ class ProjectController extends Controller
         Request $request,
         Project $project,
         CompanionService $companionService,
-        LearningExperienceService $learningExperience
+        LearningExperienceService $learningExperience,
+        ProjectValidationService $validator
     ): JsonResponse {
         $validated = $request->validate([
-            'console_output' => ['present', 'array', 'max:200'],
+            'console_output' => ['sometimes', 'array', 'max:200'],
             'console_output.*' => ['string', 'max:2000'],
             'html_code' => ['nullable', 'string', 'max:200000'],
             'css_code' => ['nullable', 'string', 'max:200000'],
@@ -171,9 +174,8 @@ class ProjectController extends Controller
             ]);
         }
 
-        $actual = $this->normalizeOutput($validated['console_output']);
-        $expected = $this->normalizeOutput(preg_split('/\R/u', (string) $project->expected_output) ?: []);
-        $passed = $this->passesValidation($project->validation_type, $actual, $expected);
+        $result = $validator->validate($project, $validated);
+        $actual = $result['console_output'];
 
         $submission = ProjectSubmission::updateOrCreate(
             [
@@ -188,12 +190,31 @@ class ProjectController extends Controller
             ]
         );
 
-        if (! $passed) {
+        if (! $result['passed']) {
             return response()->json([
                 'passed' => false,
+                'verified' => (bool) $result['trusted'],
                 'message' => 'Még nem teljesen jó. A Getingo Mentor segíthet megtalálni, hol csúszott el a megoldás.',
                 'console_output' => $actual,
                 'is_completed' => (bool) $submission->completed_at,
+            ]);
+        }
+
+        // A böngésző által jelentett console_output nem tekinthető hiteles bizonyítéknak.
+        // A konzolos ellenőrzés marad azonnali tanulói visszajelzés, de XP-t és
+        // projekt-teljesítést kizárólag szerveroldalon ellenőrizhető szabály adhat.
+        if (! $result['trusted']) {
+            return response()->json([
+                'passed' => true,
+                'verified' => false,
+                'message' => 'A böngészős ellenőrzés szerint jó a kimenet, de ez a régi ellenőrzéstípus nem ad XP-t. Az adminban állíts be szerveroldali HTML/CSS/JavaScript ellenőrzést.',
+                'console_output' => $actual,
+                'earned_xp' => 0,
+                'already_completed' => (bool) $submission->completed_at,
+                'completed_at' => $submission->completed_at,
+                'is_completed' => (bool) $submission->completed_at,
+                'xp_points' => (int) $request->user()->fresh()->xp_points,
+                'unlocked_achievements' => [],
             ]);
         }
 
@@ -241,6 +262,7 @@ class ProjectController extends Controller
 
         return response()->json([
             'passed' => true,
+            'verified' => true,
             'message' => $award['already_completed']
                 ? 'A projekt már korábban teljesítve lett. A megoldásod frissítve.'
                 : 'Sikeres projekt! Megkaptad a jutalmat, Pixel is fejlődött, a projekt pedig bekerült a portfóliódba.',
@@ -253,27 +275,4 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function normalizeOutput(array $lines): array
-    {
-        return collect($lines)
-            ->map(fn ($line) => trim((string) $line))
-            ->filter(fn (string $line) => $line !== '')
-            ->values()
-            ->all();
-    }
-
-    private function passesValidation(string $type, array $actual, array $expected): bool
-    {
-        if ($type === 'console_contains') {
-            foreach ($expected as $expectedLine) {
-                if (! in_array($expectedLine, $actual, true)) {
-                    return false;
-                }
-            }
-
-            return $expected !== [];
-        }
-
-        return $actual === $expected && $expected !== [];
-    }
 }

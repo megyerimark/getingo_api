@@ -5,13 +5,11 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\NoStorePrivateResponses;
 use App\Http\Middleware\RejectOversizedRequests;
 use App\Http\Middleware\SecurityHeaders;
-use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Env;
-
+use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -23,25 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RejectOversizedRequests::class);
         $middleware->append(SecurityHeaders::class);
         $middleware->statefulApi();
-
-        $trustedHosts = array_values(array_filter(array_map(
-            'trim',
-            explode(',', (string) Env::get(
-                'TRUSTED_HOSTS',
-                '^localhost$,^127\\.0\\.0\\.1$,^(.+\\.)?getingo\\.hu$'
-            ))
-        )));
-
         $middleware->trustHosts(
-            at: $trustedHosts,
+            at: fn () => config('security.trusted_hosts', []),
             subdomains: false,
         );
 
-        $trustedProxies = array_values(array_filter(array_map(
-            'trim',
-            explode(',', (string) Env::get('TRUSTED_PROXIES', ''))
-        )));
-
+        $trustedProxies = config('security.trusted_proxies', []);
         if ($trustedProxies !== []) {
             $middleware->trustProxies(
                 at: $trustedProxies,

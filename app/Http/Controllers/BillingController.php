@@ -79,7 +79,15 @@ class BillingController extends Controller
             ], 503);
         }
 
-        $user = $request->user();
+        $user = $request->user()->fresh();
+
+        if ($user->stripe_subscription_id
+            && ! in_array($user->subscription_status, ['canceled', 'incomplete_expired'], true)) {
+            return response()->json([
+                'message' => 'Ehhez a fiókhoz már tartozik folyamatban lévő vagy aktív előfizetés. A módosításhoz használd a számlázási portált.',
+            ], 409);
+        }
+
         $stripe = $this->stripe();
 
         if (! $user->stripe_customer_id) {
