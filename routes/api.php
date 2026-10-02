@@ -19,6 +19,7 @@ use App\Http\Controllers\CompanionController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GdprController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LessonCodeNoteController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProgressController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('throttle:public-api')->group(function () {
+    Route::get('/home', [HomeController::class, 'index']);
     Route::get('/kategoriak', [CategoryController::class, 'index']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{category_id}/lessons', [LessonController::class, 'index'])

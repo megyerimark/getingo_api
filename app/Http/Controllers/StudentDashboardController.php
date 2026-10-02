@@ -3,19 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Favorite;
 use App\Models\LessonProgress;
 use App\Models\Note;
 use App\Models\ProjectSubmission;
 use App\Models\QuizCompletion;
+use App\Services\CompanionService;
 use App\Services\LearningExperienceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StudentDashboardController extends Controller
 {
-    public function __construct(private LearningExperienceService $learningExperience)
-    {
+    public function __construct(
+        private LearningExperienceService $learningExperience,
+        private CompanionService $companionService,
+    ) {
     }
 
     public function index(Request $request): JsonResponse
@@ -159,12 +161,10 @@ class StudentDashboardController extends Controller
             'daily_goals' => $dailyGoals,
             'daily_progress_percentage' => (int) round(($completedGoals / count($dailyGoals)) * 100),
             'recent_achievements' => $this->learningExperience->recentAchievements($user, 6),
+            'companion' => $this->companionService->state($user),
             'notes' => Note::where('user_id', $user->id)
-                ->latest()
-                ->limit(20)
-                ->get(),
-            'favorites' => Favorite::where('user_id', $user->id)
-                ->latest()
+                ->with('lesson:id,title,category_id')
+                ->latest('updated_at')
                 ->limit(20)
                 ->get(),
         ]);

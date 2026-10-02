@@ -22,10 +22,33 @@ class CompanionService
     ];
 
     private const SKINS = [
-        'code-kitten-3d' => ['name' => 'Code Kitten', 'premium' => false],
-        'arctic-byte' => ['name' => 'Arctic Byte', 'premium' => false],
-        'neon-orbit' => ['name' => 'Neon Orbit', 'premium' => true],
-        'royal-circuit' => ['name' => 'Royal Circuit', 'premium' => true],
+        'code-kitten-3d' => [
+            'name' => 'Getingo Cica',
+            'premium' => false,
+            'species' => 'cat',
+            'image' => '/mascots/getingo-cat.webp',
+            'description' => 'Az alap Getingo társ: kíváncsi, barátságos és mindenki számára elérhető.',
+        ],
+        'getingo-dragon' => [
+            'name' => 'Kis Sárkány',
+            'premium' => true,
+            'species' => 'dragon',
+            'image' => '/mascots/getingo-dragon.webp',
+            'description' => 'Premium társ apró szárnyakkal és látványos, játékos megjelenéssel.',
+        ],
+        'getingo-puppy' => [
+            'name' => 'Kiskutya',
+            'premium' => true,
+            'species' => 'dog',
+            'image' => '/mascots/getingo-puppy.webp',
+            'description' => 'Premium társ puha, barátságos stílussal és vidám reakciókkal.',
+        ],
+    ];
+
+    private const LEGACY_SKIN_MAP = [
+        'arctic-byte' => 'code-kitten-3d',
+        'neon-orbit' => 'getingo-dragon',
+        'royal-circuit' => 'getingo-puppy',
     ];
 
     private const ACTIONS = [
@@ -43,7 +66,7 @@ class CompanionService
             'boost' => 30,
             'growth' => 15,
             'label' => 'Falatozás',
-            'message' => 'Pixel jóllakott, elégedetten dorombol és fejlődik tovább.',
+            'message' => 'Pixel jóllakott, elégedetten folytatja a kalandot és fejlődik tovább.',
         ],
         'play' => [
             'field' => 'happiness',
@@ -56,15 +79,15 @@ class CompanionService
     ];
 
     private const ERAS = [
-        1 => 'Baby techno cica',
-        2 => 'Kezdő buddy',
-        3 => 'Tanuló cica',
-        4 => 'Fejlődő tech-cica',
+        1 => 'Apró társ',
+        2 => 'Kíváncsi felfedező',
+        3 => 'Tanuló buddy',
+        4 => 'Fejlődő társ',
         5 => 'Okos segítő',
         6 => 'Haladó buddy',
-        7 => 'Elit cica',
+        7 => 'Elit társ',
         8 => 'Mester buddy',
-        9 => 'Legendás techno cica',
+        9 => 'Legendás társ',
         10 => 'Ultimate Getingo Buddy',
     ];
 
@@ -148,6 +171,15 @@ class CompanionService
     {
         $companion ??= $this->getOrCreate($user);
 
+        $normalizedSkin = self::LEGACY_SKIN_MAP[$companion->selected_skin] ?? $companion->selected_skin;
+        if (! array_key_exists($normalizedSkin, self::SKINS)) {
+            $normalizedSkin = 'code-kitten-3d';
+        }
+        if ($normalizedSkin !== $companion->selected_skin) {
+            $companion->selected_skin = $normalizedSkin;
+            $companion->save();
+        }
+
         if (! $user->is_premium
             && isset(self::SKINS[$companion->selected_skin])
             && self::SKINS[$companion->selected_skin]['premium']) {
@@ -193,6 +225,9 @@ class CompanionService
                     'key' => $key,
                     'name' => $skin['name'],
                     'premium' => $skin['premium'],
+                    'species' => $skin['species'],
+                    'image' => $skin['image'],
+                    'description' => $skin['description'],
                     'unlocked' => ! $skin['premium'] || $user->is_premium,
                 ])
                 ->values(),

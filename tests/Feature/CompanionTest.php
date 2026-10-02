@@ -162,4 +162,42 @@ class CompanionTest extends TestCase
             ->assertJsonPath('companion.selected_room', 'aurora');
     }
 
+    public function test_free_user_gets_cat_and_cannot_select_premium_mascots(): void
+    {
+        $user = User::factory()->create([
+            'plan' => 'free',
+            'subscription_status' => null,
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/companion')
+            ->assertOk()
+            ->assertJsonPath('companion.selected_skin', 'code-kitten-3d')
+            ->assertJsonPath('available_skins.0.species', 'cat')
+            ->assertJsonPath('available_skins.0.image', '/mascots/getingo-cat.webp')
+            ->assertJsonPath('available_skins.1.unlocked', false)
+            ->assertJsonPath('available_skins.2.unlocked', false);
+
+        $this->patchJson('/api/companion/preferences', ['skin' => 'getingo-dragon'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('skin');
+    }
+
+    public function test_premium_user_can_select_dragon_or_puppy(): void
+    {
+        $user = User::factory()->create([
+            'plan' => 'premium',
+            'subscription_status' => 'active',
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/companion/preferences', ['skin' => 'getingo-dragon'])
+            ->assertOk()
+            ->assertJsonPath('companion.selected_skin', 'getingo-dragon');
+
+        $this->patchJson('/api/companion/preferences', ['skin' => 'getingo-puppy'])
+            ->assertOk()
+            ->assertJsonPath('companion.selected_skin', 'getingo-puppy');
+    }
+
 }

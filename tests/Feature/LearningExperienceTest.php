@@ -64,7 +64,9 @@ class LearningExperienceTest extends TestCase
             ->assertOk()
             ->assertJsonPath('next_lesson.id', $lesson->id)
             ->assertJsonPath('learning_path.0.name', 'JavaScript')
-            ->assertJsonPath('daily_goals.0.key', 'lesson');
+            ->assertJsonPath('daily_goals.0.key', 'lesson')
+            ->assertJsonPath('companion.companion.selected_skin', 'code-kitten-3d')
+            ->assertJsonStructure(['notes', 'companion']);
     }
 
     public function test_completed_project_is_visible_in_own_portfolio(): void

@@ -160,17 +160,25 @@ class LearningExperienceService
             'xp-1000' => ['title' => 'Getingo Veteran', 'description' => 'Elérted az 1000 XP-t.', 'icon' => 'bi-gem', 'sort_order' => 120],
         ];
 
+        Achievement::query()->upsert(
+            collect($catalog)
+                ->map(fn (array $definition, string $slug) => ['slug' => $slug, ...$definition])
+                ->values()
+                ->all(),
+            ['slug'],
+            ['title', 'description', 'icon', 'sort_order']
+        );
+
+        $models = Achievement::query()
+            ->whereIn('slug', array_keys($catalog))
+            ->get()
+            ->keyBy('slug');
+
         $result = [];
-
         foreach ($catalog as $slug => $definition) {
-            $achievement = Achievement::updateOrCreate(
-                ['slug' => $slug],
-                $definition
-            );
-
             $result[$slug] = [
                 ...$definition,
-                'model' => $achievement,
+                'model' => $models->get($slug),
             ];
         }
 
