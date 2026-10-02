@@ -4,6 +4,21 @@ Dátum: 2026-10-01
 
 ## Mi változott?
 
+## Stabilizálás, toastok és tananyag-kezelés
+
+- Globális `ToastService` + toast konténer készült siker, hiba, figyelmeztetés és információ visszajelzésekhez.
+- Az admin CRUD műveletek, fiókkezelés, tananyag-műveletek, email-megerősítés, kijelentkezés, Buddy műveletek és Stripe indítási hibák egységes toast visszajelzést használnak.
+- A tananyag JavaScript futtatójának `console.log/error/warn` kimenete szándékosan megmaradt, mert ez a tanulási funkció része.
+- Email cím módosításakor a backend most valóban ellenőrzi a jelenlegi jelszót, és erre feature tesztek is készültek.
+- Jelszóváltás után az aktuális böngésző-session megmarad; a frontend nem jelentkezteti ki tévesen a felhasználót.
+- Az auth session-visszaállítás közös, deduplikált kérést használ, így a navbar és a route guardok nem indítanak párhuzamos, azonos `/api/user` kéréseket.
+- A Project Lab `postMessage` fogadása az iframe `event.source` értékét is ellenőrzi.
+- Az admin tananyagoldalon gyorsfelviteli munkafolyamat készült: kategória és fejezet megtartása, automatikus következő sorrend, címmező fókusz, új fejezet automatikus kiválasztása, keresés és szűrés a meglévő tananyagok között.
+- A hibás service teszt-osztálynevek javítva, a komponens tesztekhez szükséges HTTP/router teszt providerek bekerültek.
+- A Laravel API gyökeréből eltávolításra került a tévesen bemásolt Angular projekt, Angular VS Code konfiguráció és a gépspecifikus `public/storage` symlink. A Laravel `.gitignore`, `.editorconfig` és `package.json` vissza lett igazítva a Laravel 13 projektszerkezetéhez.
+- A byte-ra pontos, nem használt `* 2.*` másolatok eltávolításra kerültek.
+
+
 ### Laravel API
 - A projektellenőrzés többé nem ad XP-t pusztán a böngésző által beküldött `console_output` alapján.
 - Új szerveroldali forrásellenőrzések: `html_contains`, `css_contains`, `javascript_contains`, `source_contains`.
@@ -71,7 +86,7 @@ Az `Adatkezelési tájékoztató` továbbra is technikai vázlat: az adatkezelő
 
 ## Ellenőrzési állapot
 
-- 127 Laravel/PHP fájl: `php -l` szintaktikai ellenőrzés sikeres.
+- 112 Laravel/PHP fájl: `php -l` szintaktikai ellenőrzés sikeres.
 - Titok/secret mintákra és aktív veszélyes frontend mintákra (`localStorage`, `eval`, `innerHTML`) újrakeresés történt; nyilvánvaló aktív találat nem maradt.
 - Teljes `php artisan test` nem futott, mert a ZIP nem tartalmazott `vendor/` könyvtárat és Composer nem volt elérhető a futtatási környezetben.
 - Teljes Angular production build nem futott végig, mert a függőségtelepítés a futtatási környezetben megszakadt; a módosított TypeScript/SCSS fájlokon külön szintaktikai/strukturális ellenőrzések készültek.

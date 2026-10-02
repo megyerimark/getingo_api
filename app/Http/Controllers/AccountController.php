@@ -8,13 +8,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AccountController extends Controller
 {
     public function update(Request $request)
     {
         $user = $request->user();
-        $originalEmail = $user->email;
+        $originalEmail = Str::lower(trim((string) $user->email));
 
         $request->merge([
             'email' => Str::lower(trim((string) $request->email)),
@@ -23,23 +24,32 @@ class AccountController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'current_password' => ['nullable', 'string'],
         ]);
+
+        $emailChanged = $originalEmail !== $validated['email'];
+
+        if ($emailChanged && (! isset($validated['current_password']) || ! Hash::check($validated['current_password'], $user->password))) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Az email cím módosításához add meg helyesen a jelenlegi jelszavadat.'],
+            ]);
+        }
 
         $user->name = trim($validated['name']);
         $user->email = $validated['email'];
 
-        if ($originalEmail !== $validated['email']) {
+        if ($emailChanged) {
             $user->email_verified_at = null;
         }
 
         $user->save();
 
-        if ($originalEmail !== $validated['email']) {
+        if ($emailChanged) {
             $user->sendEmailVerificationNotification();
         }
 
         return response()->json([
-            'message' => $originalEmail !== $validated['email']
+            'message' => $emailChanged
                 ? 'A profil frissült. Az új email cím megerősítéséhez elküldtük a linket.'
                 : 'A profil frissítése sikerült.',
             'user' => $user->fresh(),

@@ -1,59 +1,42 @@
-# GetingoAng
+# Getingo API
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.10.
+A Getingo Laravel 13 REST API-ja. Az Angular kliens külön projektben (`getingo_ang`) található; ez a repository kizárólag a backendhez tartozó Laravel kódot tartalmazza.
 
-## Development server
+## Követelmények
 
-To start a local development server, run:
+- PHP 8.3+
+- Composer
+- a választott adatbázis (az alap `.env.example` SQLite-tal indul)
+- Node.js + npm csak akkor szükséges, ha a Laravel Vite asseteket is buildelni szeretnéd
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Helyi indítás
 
 ```bash
-ng generate component component-name
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan storage:link
+php artisan serve
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Az Angular fejlesztői kliens alapértelmezett címe `http://localhost:4200`, a Laravel API-é `http://localhost:8000`. A Sanctum/CORS beállításokat az `.env.example` tartalmazza.
+
+## Tesztek
 
 ```bash
-ng generate --help
+php artisan test
 ```
 
-## Building
-
-To build the project run:
+## Laravel Vite assetek
 
 ```bash
-ng build
+npm install
+npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Fontos
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Valódi titkokat ne commitolj; az `.env` fájl gitignore alatt van.
+- A `public/storage` symlinket ne másold másik gépről: minden környezetben a `php artisan storage:link` hozza létre.
+- Éles telepítés előtt nézd át az `.env.production.example` és `SECURITY_SETUP.md` fájlokat.
