@@ -101,6 +101,9 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:user-api', 'no-store'])->
         Route::post('/projects/{project}/check', [ProjectController::class, 'check'])
             ->whereNumber('project')
             ->middleware('throttle:quiz');
+        Route::post('/projects/{project}/mentor', [ProjectController::class, 'mentor'])
+            ->whereNumber('project')
+            ->middleware('throttle:quiz');
 
         Route::get('/companion', [CompanionController::class, 'show']);
         Route::post('/companion/action', [CompanionController::class, 'action']);

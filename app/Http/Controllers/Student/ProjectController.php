@@ -8,6 +8,7 @@ use App\Models\ProjectSubmission;
 use App\Services\CompanionService;
 use App\Services\LearningExperienceService;
 use App\Services\ProjectValidationService;
+use App\Services\ProjectMentorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -151,6 +152,21 @@ class ProjectController extends Controller
             'message' => 'A projektmunkád elmentve.',
             'completed_at' => $submission->completed_at,
         ]);
+    }
+
+    public function mentor(Request $request, Project $project, ProjectMentorService $mentor): JsonResponse
+    {
+        $validated = $request->validate([
+            'console_output' => ['sometimes', 'array', 'max:200'],
+            'console_output.*' => ['string', 'max:2000'],
+            'html_code' => ['nullable', 'string', 'max:200000'],
+            'css_code' => ['nullable', 'string', 'max:200000'],
+            'javascript_code' => ['nullable', 'string', 'max:200000'],
+        ]);
+
+        return response()->json(
+            $mentor->analyze($project, $validated, (bool) $request->user()->is_premium)
+        );
     }
 
     public function check(
