@@ -16,6 +16,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanionController;
+use App\Http\Controllers\CodeExecutionController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GdprController;
@@ -51,6 +52,12 @@ Route::get('/search', [SearchController::class, 'index'])
 Route::get('/billing/plans', [BillingController::class, 'plans'])
     ->middleware('throttle:public-api');
 
+Route::get('/code/capabilities', [CodeExecutionController::class, 'capabilities'])
+    ->middleware('throttle:public-api');
+
+Route::post('/code/run', [CodeExecutionController::class, 'run'])
+    ->middleware('throttle:code-runner');
+
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 Route::post('/regisztracio', [AuthController::class, 'register'])
@@ -58,6 +65,12 @@ Route::post('/regisztracio', [AuthController::class, 'register'])
 
 Route::post('/bejelentkezes', [AuthController::class, 'login'])
     ->middleware('throttle:login');
+
+Route::post('/password/forgot', [AuthController::class, 'forgotPassword'])
+    ->middleware('throttle:password-reset');
+
+Route::post('/password/reset', [AuthController::class, 'resetPassword'])
+    ->middleware('throttle:password-reset');
 
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
     ->middleware(['signed', 'throttle:6,1'])

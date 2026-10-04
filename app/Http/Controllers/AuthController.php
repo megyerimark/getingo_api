@@ -6,8 +6,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -88,6 +90,64 @@ class AuthController extends Controller
             'message' => 'Sikeres bejelentkezés!',
             'user' => $user->fresh(),
         ], 200);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->email)),
+        ]);
+
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        // Szándékosan ugyanazt a választ adjuk akkor is, ha az email nem létezik,
+        // így az endpoint nem használható felhasználói fiókok felderítésére.
+        PasswordBroker::sendResetLink([
+            'email' => $validated['email'],
+        ]);
+
+        return response()->json([
+            'message' => 'Ha a megadott email címhez tartozik Getingo fiók, elküldtük a jelszó-visszaállító linket.',
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->email)),
+        ]);
+
+        $validated = $request->validate([
+            'token' => ['required', 'string'],
+            'email' => ['required', 'email'],
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(12)->mixedCase()->numbers(),
+            ],
+        ]);
+
+        $status = PasswordBroker::reset(
+            $validated,
+            function (User $user, string $password): void {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+            }
+        );
+
+        if ($status !== PasswordBroker::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => [__($status)],
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'A jelszavad sikeresen megváltozott. Most már bejelentkezhetsz az új jelszóval.',
+        ]);
     }
 
     public function me(Request $request)

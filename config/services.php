@@ -22,6 +22,32 @@ return [
         ],
     ],
 
+
+    'code_runner' => [
+        'providers' => [
+            'python' => env('CODE_RUNNER_PYTHON_PROVIDER', 'judge0'),
+            'csharp' => env('CODE_RUNNER_CSHARP_PROVIDER', 'onecompiler'),
+            'sql' => env('CODE_RUNNER_SQL_PROVIDER', 'onecompiler'),
+        ],
+        'fallback_provider' => env('CODE_RUNNER_FALLBACK_PROVIDER', 'judge0'),
+    ],
+
+    'judge0' => [
+        'url' => env('JUDGE0_URL', 'https://ce.judge0.com'),
+        'auth_token' => env('JUDGE0_AUTH_TOKEN'),
+    ],
+
+    'onecompiler' => [
+        'url' => env('ONECOMPILER_URL', 'https://api.onecompiler.com/v1'),
+        'api_key' => env('ONECOMPILER_API_KEY'),
+    ],
+
+    'piston' => [
+        'url' => env('PISTON_URL'),
+        'auth_header' => env('PISTON_AUTH_HEADER', 'Authorization'),
+        'auth_token' => env('PISTON_AUTH_TOKEN'),
+    ],
+
     'stripe' => [
         'secret' => env('STRIPE_SECRET_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),

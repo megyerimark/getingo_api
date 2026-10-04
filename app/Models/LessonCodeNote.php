@@ -11,7 +11,9 @@ class LessonCodeNote extends Model
         'lesson_id',
         'html_code',
         'css_code',
-        'javascript_code'
+        'javascript_code',
+        'code',
+        'language'
     ];
 
     public function user()
