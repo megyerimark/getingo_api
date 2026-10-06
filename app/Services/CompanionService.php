@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\LessonProgress;
+use App\Models\QuizCompletion;
 use App\Models\User;
 use App\Models\UserCompanion;
 use Illuminate\Support\Facades\DB;
@@ -22,33 +24,54 @@ class CompanionService
     ];
 
     private const SKINS = [
-        'code-kitten-3d' => [
-            'name' => 'Getingo Cica',
+        'getingo-mouse' => [
+            'name' => 'Getingo Egér',
             'premium' => false,
-            'species' => 'cat',
-            'image' => '/mascots/getingo-cat.webp',
-            'description' => 'Az alap Getingo társ: kíváncsi, barátságos és mindenki számára elérhető.',
+            'species' => 'mouse',
+            'image' => '/mascots/getingo-mouse.png',
+            'model_url' => '/models/getingo-buddies/getingo-mouse.glb',
+            'description' => 'A mindenki számára elérhető alap Buddy: kíváncsi, barátságos és mindig hoz magával egy kis harapnivalót.',
+        ],
+        'getingo-sloth' => [
+            'name' => 'Getingo Lajhár',
+            'premium' => true,
+            'species' => 'sloth',
+            'image' => '/mascots/getingo-sloth.png',
+            'model_url' => '/models/getingo-buddies/getingo-sloth.glb',
+            'description' => 'Nyugodt Premium társ, aki emlékeztet rá, hogy a biztos haladás fontosabb a kapkodásnál.',
+        ],
+        'getingo-reindeer' => [
+            'name' => 'Noel Rénszarvas',
+            'premium' => true,
+            'species' => 'reindeer',
+            'image' => '/mascots/getingo-reindeer.png',
+            'model_url' => '/models/getingo-buddies/getingo-reindeer.glb',
+            'description' => 'Vidám Premium Buddy karakteres agancsokkal és ünnepi energiával.',
+        ],
+        'getingo-shark' => [
+            'name' => 'Getingo Cápa',
+            'premium' => true,
+            'species' => 'shark',
+            'image' => '/mascots/getingo-shark.png',
+            'model_url' => '/models/getingo-buddies/getingo-shark.glb',
+            'description' => 'Lendületes Premium társ azoknak, akik szeretnek egyenesen ráharapni a következő kihívásra.',
         ],
         'getingo-dragon' => [
             'name' => 'Kis Sárkány',
             'premium' => true,
             'species' => 'dragon',
-            'image' => '/mascots/getingo-dragon.webp',
-            'description' => 'Premium társ apró szárnyakkal és látványos, játékos megjelenéssel.',
-        ],
-        'getingo-puppy' => [
-            'name' => 'Kiskutya',
-            'premium' => true,
-            'species' => 'dog',
-            'image' => '/mascots/getingo-puppy.webp',
-            'description' => 'Premium társ puha, barátságos stílussal és vidám reakciókkal.',
+            'image' => '/mascots/getingo-dragon.png',
+            'model_url' => '/models/getingo-buddies/getingo-dragon.glb',
+            'description' => 'A Premium kollekció legendás kis sárkánya, látványos szárnyakkal és erős karakterrel.',
         ],
     ];
 
     private const LEGACY_SKIN_MAP = [
-        'arctic-byte' => 'code-kitten-3d',
+        'code-kitten-3d' => 'getingo-mouse',
+        'arctic-byte' => 'getingo-mouse',
+        'getingo-puppy' => 'getingo-sloth',
+        'royal-circuit' => 'getingo-sloth',
         'neon-orbit' => 'getingo-dragon',
-        'royal-circuit' => 'getingo-puppy',
     ];
 
     private const ACTIONS = [
@@ -102,7 +125,7 @@ class CompanionService
                 'water' => 74,
                 'hunger' => 72,
                 'happiness' => 78,
-                'selected_skin' => 'code-kitten-3d',
+                'selected_skin' => 'getingo-mouse',
                 'selected_room' => 'studio',
                 'last_decay_at' => now(),
             ]
@@ -173,7 +196,7 @@ class CompanionService
 
         $normalizedSkin = self::LEGACY_SKIN_MAP[$companion->selected_skin] ?? $companion->selected_skin;
         if (! array_key_exists($normalizedSkin, self::SKINS)) {
-            $normalizedSkin = 'code-kitten-3d';
+            $normalizedSkin = 'getingo-mouse';
         }
         if ($normalizedSkin !== $companion->selected_skin) {
             $companion->selected_skin = $normalizedSkin;
@@ -183,7 +206,7 @@ class CompanionService
         if (! $user->is_premium
             && isset(self::SKINS[$companion->selected_skin])
             && self::SKINS[$companion->selected_skin]['premium']) {
-            $companion->selected_skin = 'code-kitten-3d';
+            $companion->selected_skin = 'getingo-mouse';
             $companion->save();
         }
 
@@ -198,10 +221,12 @@ class CompanionService
         $companion->refresh();
 
         $xp = (int) $user->xp_points;
-        $knowledgeGrowth = intdiv($xp, 2);
+        $learning = $this->learningProgress($user);
+        $knowledgeGrowth = $learning['points'];
         $careGrowth = (int) $companion->growth_points;
-        $totalGrowth = $knowledgeGrowth + $careGrowth;
-        $growth = $this->growthForPoints($totalGrowth, $knowledgeGrowth, $careGrowth);
+        // A Buddy tanulási szintjét kizárólag valódi lecke- és kvízteljesítés növeli.
+        // A gondozás továbbra is ad kötődési/growth pontot, de nem lehet vele kiváltani a tanulást.
+        $growth = $this->growthForPoints($knowledgeGrowth, $knowledgeGrowth, $careGrowth, $learning);
         $mood = $this->moodForCompanion($companion);
 
         return [
@@ -227,6 +252,7 @@ class CompanionService
                     'premium' => $skin['premium'],
                     'species' => $skin['species'],
                     'image' => $skin['image'],
+                    'model_url' => $skin['model_url'],
                     'description' => $skin['description'],
                     'unlocked' => ! $skin['premium'] || $user->is_premium,
                 ])
@@ -304,23 +330,28 @@ class CompanionService
         $companion->save();
     }
 
-    private function growthForPoints(int $points, int $knowledgeGrowth, int $careGrowth): array
-    {
+    private function growthForPoints(
+        int $points,
+        int $knowledgeGrowth,
+        int $careGrowth,
+        array $learning
+    ): array {
+        $maxLevel = max(2, (int) config('gamification.companion.max_level', self::MAX_LEVEL));
         $level = 1;
 
-        for ($candidate = 2; $candidate <= self::MAX_LEVEL; $candidate++) {
-            if ($points < $this->pointsRequiredForLevel($candidate)) {
+        for ($candidate = 2; $candidate <= $maxLevel; $candidate++) {
+            if ($points < $this->pointsRequiredForLevel($candidate, $maxLevel)) {
                 break;
             }
 
             $level = $candidate;
         }
 
-        $era = min(10, intdiv($level - 1, 10) + 1);
-        $currentLevelPoints = $this->pointsRequiredForLevel($level);
-        $nextLevelPoints = $level >= self::MAX_LEVEL
+        $era = min(10, intdiv($level - 1, max(1, intdiv($maxLevel, 10))) + 1);
+        $currentLevelPoints = $this->pointsRequiredForLevel($level, $maxLevel);
+        $nextLevelPoints = $level >= $maxLevel
             ? null
-            : $this->pointsRequiredForLevel($level + 1);
+            : $this->pointsRequiredForLevel($level + 1, $maxLevel);
 
         if ($nextLevelPoints === null) {
             $progress = 100;
@@ -332,12 +363,12 @@ class CompanionService
             $pointsToNext = max(0, $nextLevelPoints - $points);
         }
 
-        $sizePercentage = (int) round(70 + (($level - 1) / 99) * 55);
+        $sizePercentage = (int) round(70 + (($level - 1) / max(1, $maxLevel - 1)) * 55);
 
         return [
             'key' => 'era-'.$era,
             'level' => $level,
-            'max_level' => self::MAX_LEVEL,
+            'max_level' => $maxLevel,
             'era' => $era,
             'name' => self::ERAS[$era],
             'progress_percentage' => $progress,
@@ -351,19 +382,66 @@ class CompanionService
             'care_growth_points' => $careGrowth,
             'total_growth_points' => $points,
             'size_percentage' => $sizePercentage,
+            'curriculum_points' => $learning['points'],
+            'curriculum_max_points' => $learning['max_points'],
+            'completed_lessons' => $learning['completed_lessons'],
+            'total_lessons' => $learning['total_lessons'],
+            'completed_quizzes' => $learning['completed_quizzes'],
+            'total_quizzes' => $learning['total_quizzes'],
+            'curriculum_percentage' => $learning['percentage'],
         ];
     }
 
-    private function pointsRequiredForLevel(int $level): int
+    private function pointsRequiredForLevel(int $level, int $maxLevel = self::MAX_LEVEL): int
     {
         if ($level <= 1) {
             return 0;
         }
 
-        $step = $level - 1;
+        $maxPoints = max(1, (int) config('gamification.curriculum.max_xp', 11275));
+        if ($level >= $maxLevel) {
+            return $maxPoints;
+        }
 
-        // 1 -> 100 között fokozatosan lassuló, de elérhető fejlődési görbe.
-        return (25 * $step) + intdiv($step * $step, 6);
+        $exponent = max(1.0, (float) config('gamification.companion.level_curve_exponent', 1.35));
+        $ratio = ($level - 1) / max(1, $maxLevel - 1);
+
+        return min($maxPoints, max(1, (int) round($maxPoints * pow($ratio, $exponent))));
+    }
+
+    private function learningProgress(User $user): array
+    {
+        $totalLessons = max(1, (int) config('gamification.curriculum.lessons', 451));
+        $totalQuizzes = max(1, (int) config('gamification.curriculum.quizzes', 1353));
+        $lessonXp = max(0, (int) config('gamification.curriculum.lesson_xp', 10));
+        $quizXp = max(0, (int) config('gamification.curriculum.quiz_xp', 5));
+        $maxPoints = max(1, ($totalLessons * $lessonXp) + ($totalQuizzes * $quizXp));
+
+        $completedLessons = min(
+            $totalLessons,
+            LessonProgress::query()
+                ->where('user_id', $user->id)
+                ->where('completed', true)
+                ->count()
+        );
+        $completedQuizzes = min(
+            $totalQuizzes,
+            QuizCompletion::query()
+                ->where('user_id', $user->id)
+                ->count()
+        );
+
+        $points = min($maxPoints, ($completedLessons * $lessonXp) + ($completedQuizzes * $quizXp));
+
+        return [
+            'points' => $points,
+            'max_points' => $maxPoints,
+            'completed_lessons' => $completedLessons,
+            'total_lessons' => $totalLessons,
+            'completed_quizzes' => $completedQuizzes,
+            'total_quizzes' => $totalQuizzes,
+            'percentage' => (int) floor(($points / $maxPoints) * 100),
+        ];
     }
 
     private function moodForCompanion(UserCompanion $companion): array
